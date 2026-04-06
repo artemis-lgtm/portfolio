@@ -65,7 +65,7 @@
   .pstat{flex:1;background:var(--surface2);border-radius:8px;padding:10px 12px;text-align:center;}
   .pstat .n{font-size:18px;font-weight:800;}
   .pstat .l{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
-  .proxy-grid{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+
   .proxy-card{flex:1;min-width:200px;background:var(--surface2);border-radius:10px;padding:12px;}
   .proxy-card h4{font-weight:700;font-size:13px;margin-bottom:8px;}
   .proxy-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;}
@@ -128,7 +128,7 @@
     .total-bar{flex-direction:column;gap:6px;text-align:center;padding:12px 16px;}
     .total-bar .vals{display:flex;gap:12px;justify-content:center;}
     .goals{gap:8px;}
-    .proxy-grid{flex-direction:column;}
+
     .ie-strip{flex-wrap:wrap;gap:6px;padding:6px 8px;}
     .ie-strip input{width:100px;}
     .stock-note{font-size:9px;padding:6px 8px;}
@@ -197,27 +197,7 @@
   </div>
 </div>
 
-<div class="card">
-  <div class="sh" style="color:var(--orange);">Liquidatable Assets (Dry Powder)</div>
-  <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-    <div class="pstat" style="min-width:120px;"><div class="n" style="color:var(--yellow);">$65K</div><div class="l">Boat</div></div>
-    <div class="pstat" style="min-width:120px;"><div class="n" style="color:var(--yellow);">$41K</div><div class="l">Rolex DD</div></div>
-    <div class="pstat" style="min-width:120px;"><div class="n" style="color:var(--accent);">$2.2M</div><div class="l">Home Equity</div></div>
-    <div class="pstat" style="min-width:120px;"><div class="n" style="color:var(--green);">$106K</div><div class="l">Quick Liquid</div></div>
-  </div>
-  <div class="sh" style="color:var(--blue);">BTC Proxy Analysis</div>
-  <div class="proxy-grid">
-    <div class="proxy-card"><h4>MSTR (Strategy)</h4>
-      <div class="proxy-row"><span class="k">mNAV</span><span style="color:var(--green);font-weight:700;">1.07x</span></div>
-      <div class="proxy-row"><span class="k">BTC Holdings</span><span id="proxy-mstr-btc">717,722</span></div>
-      <div class="proxy-row"><span class="k">Your BTC Equiv</span><span id="proxy-mstr-yours">--</span></div>
-    </div>
-    <div class="proxy-card"><h4>Metaplanet (3350.T)</h4>
-      <div class="proxy-row"><span class="k">BTC Holdings</span><span id="proxy-meta-btc">35,102</span></div>
-      <div class="proxy-row"><span class="k">Your BTC Equiv</span><span id="proxy-meta-yours">--</span></div>
-    </div>
-  </div>
-</div>
+
 
 <div class="mp-overlay" id="mp-overlay" onclick="if(event.target===this)closeModal()">
   <div class="mp-modal">
@@ -558,17 +538,7 @@ function renderPortfolio(){
   document.getElementById('sol-goal-text').textContent=`${totalSol.toFixed(2)} SOL -- ${solPct}% complete`;
   document.getElementById('sol-goal-bar').style.width=solPct+'%';
 
-  // PROXY ANALYSIS
-  const mstrSp=stockPrices['MSTR'];
-  const metaSp=stockPrices['3350.T'];
-  if(mstrSp){
-    const mstrBtcPerShare=(mstrSp.price*1.07)/btcPrice;
-    document.getElementById('proxy-mstr-yours').textContent=fmtBtc(110*mstrBtcPerShare);
-  }
-  if(metaSp){
-    const metaUsd=metaSp.price_usd||(metaSp.price/150);
-    document.getElementById('proxy-meta-yours').textContent=fmtBtc((3000*metaUsd)/btcPrice);
-  }
+
 
   // STATUS
   const now=new Date();
