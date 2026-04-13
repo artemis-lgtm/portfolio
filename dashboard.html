@@ -690,7 +690,7 @@ function _buildPositionSnapshot(){
 
 async function syncToGist(){
   const token=_getToken();
-  if(!token)return;
+  if(!token){console.warn('[gist-sync] no token');return;}
   try{
     const snapshot=_buildPositionSnapshot();
     const r=await fetch(`https://api.github.com/gists/${_GIST_ID}`,{
@@ -698,8 +698,15 @@ async function syncToGist(){
       headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
       body:JSON.stringify({files:{[_GIST_FILE]:{content:JSON.stringify(snapshot,null,2)}}})
     });
-    if(r.ok)console.log('[gist-sync] pushed positions to gist');
-    else console.warn('[gist-sync] push failed:',r.status);
+    if(r.ok){
+      console.log('[gist-sync] pushed positions to gist');
+      // Brief visual confirmation
+      const el=document.querySelector('.live-dot');
+      if(el){const orig=el.textContent;el.textContent='SYNCED';setTimeout(()=>el.textContent=orig,1500);}
+    }else{
+      const body=await r.text();
+      console.warn('[gist-sync] push failed:',r.status,body);
+    }
   }catch(e){console.warn('[gist-sync] failed:',e);}
 }
 
