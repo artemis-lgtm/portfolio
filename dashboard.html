@@ -176,6 +176,7 @@
     <button class="tab-btn" id="tab-collectibles" onclick="showTab('collectibles')">Collectibles</button>
     <div style="flex:1;"></div>
     <button class="mp-add-btn" onclick="openAddPosition()">+ Add</button>
+    <button class="mp-add-btn" onclick="setupSyncToken()" title="Set up cloud sync token" style="margin-left:6px;color:var(--cyan);border-color:var(--cyan);">Sync</button>
     <div style="padding:8px 12px;font-size:10px;color:var(--text-dim);" id="price-status">Loading...</div>
   </div>
   <div id="panel-crypto">
@@ -244,23 +245,23 @@
    HOLDINGS — hardcoded baseline
    ══════════════════════════════════════════════════════════════ */
 const CRYPTO=[
-  {id:'bitcoin',sym:'BTC',qty:13.20712675,color:'var(--yellow)',top:true},
+  {id:'bitcoin',sym:'BTC',qty:13.357127,color:'var(--yellow)',top:true},
   {id:'ethereum',sym:'ETH',qty:41.83,color:'#627eea',top:true},
   {id:'solana',sym:'SOL',qty:829.13,color:'var(--accent)',top:true},
-  {id:'sui',sym:'SUI',qty:20000.10,color:'#4da2ff',top:true},
-  {id:'chainlink',sym:'LINK',qty:1753.80,color:'#2a5ada',top:true},
-  {id:'avalanche-2',sym:'AVAX',qty:866.50,color:'#e84142',top:true},
-  {id:'sei-network',sym:'SEI',qty:71892.50,color:'#9b1c1c'},
-  {id:'helium',sym:'HNT',qty:3288.60,color:'#474dff'},
-  {id:'cosmos',sym:'ATOM',qty:972.70,color:'#2e3148'},
+  {id:'sui',sym:'SUI',qty:20678,color:'#4da2ff',top:true},
+  {id:'chainlink',sym:'LINK',qty:1754,color:'#2a5ada',top:true},
+  {id:'avalanche-2',sym:'AVAX',qty:866.5,color:'#e84142',top:true},
+  {id:'sei-network',sym:'SEI',qty:71893,color:'#9b1c1c'},
+  {id:'helium',sym:'HNT',qty:3289,color:'#474dff'},
+  {id:'cosmos',sym:'ATOM',qty:972.7,color:'#2e3148'},
   {id:'hivemapper',sym:'HONEY',qty:760599,color:'#f59e0b'},
   {id:'akash-network',sym:'AKT',qty:5062,color:'#ff414c'},
-  {id:'decentraland',sym:'MANA',qty:18488.59,color:'#ff2d55'},
+  {id:'decentraland',sym:'MANA',qty:18489,color:'#ff2d55'},
   {id:'ripple',sym:'XRP',qty:196,color:'#23292f'},
   {id:'aptos',sym:'APT',qty:1376,color:'#00d4aa'},
   {id:'basic-attention-token',sym:'BAT',qty:7404,color:'#ff5000'},
   {id:'spx6900',sym:'SPX',qty:6504,color:'#ff6b6b'},
-  {id:'matic-network',sym:'POL',qty:8299.55,color:'#8247e5'},
+  {id:'matic-network',sym:'POL',qty:8300,color:'#8247e5'},
   {id:'cardano',sym:'ADA',qty:2966,color:'#0033ad'},
   {id:'filecoin',sym:'FIL',qty:756.40,color:'#0090ff'},
   {id:'uniswap',sym:'UNI',qty:150,color:'#ff007a'},
@@ -297,8 +298,8 @@ const CRYPTO=[
 ];
 
 const EQUITIES=[
-  {sym:'TSLA',name:'Tesla',shares:130,proxyKey:'TSLA',color:'#e31937'},
-  {sym:'MSTR',name:'Strategy',shares:110,proxyKey:'MSTR',color:'var(--blue)'},
+  {sym:'TSLA',name:'Tesla',shares:150,proxyKey:'TSLA',color:'#e31937'},
+  {sym:'MSTR',name:'Strategy',shares:150,proxyKey:'MSTR',color:'var(--blue)'},
   {sym:'GME',name:'GameStop',shares:250,proxyKey:'GME',color:'#ff0000'},
   {sym:'GME+',name:'GME+',shares:30,proxyKey:'GME',color:'#ff0000'},
   {sym:'Metaplanet',name:'Metaplanet',shares:3000,proxyKey:'3350.T',color:'var(--cyan)',isJpy:true},
@@ -636,6 +637,7 @@ function inlineSave(type,src,isManual,rowId){
   const strip=document.querySelector('tr.inline-edit');
   if(strip)strip.remove();
   renderPortfolio();
+  syncToGist(); // push to cloud
 }
 
 function inlineDelete(type,mpId){
@@ -646,6 +648,7 @@ function inlineDelete(type,mpId){
   const strip=document.querySelector('tr.inline-edit');
   if(strip)strip.remove();
   renderPortfolio();
+  syncToGist(); // push to cloud
 }
 
 // On load: apply any saved qty overrides to hardcoded arrays
@@ -659,6 +662,90 @@ function inlineDelete(type,mpId){
     else if(type==='collectibles'){const c=COLLECTIBLES.find(c=>c.sym===src);if(c)c.qty=v;}
   });
 })();
+
+/* ══════════════════════════════════════════════════════════════
+   GIST SYNC — positions cloud-sync so Artemis can see edits
+   Token stored in localStorage (enter once, persists forever)
+   ══════════════════════════════════════════════════════════════ */
+const _GIST_ID='d3b25b7f74a717ad7980eaa264ac1f04';
+const _GIST_FILE='positions.json';
+const _TOKEN_KEY='portfolio-sync-token';
+
+function _getToken(){return localStorage.getItem(_TOKEN_KEY);}
+function _setToken(t){localStorage.setItem(_TOKEN_KEY,t);}
+
+function setupSyncToken(){
+  const existing=_getToken();
+  const t=prompt('Enter GitHub sync token (one-time setup):',existing||'');
+  if(t&&t.trim()){_setToken(t.trim());syncToGist();alert('Sync token saved. Positions will sync automatically.');}
+}
+
+function _buildPositionSnapshot(){
+  const crypto=CRYPTO.map(c=>({id:c.id,sym:c.sym,qty:c.qty}));
+  const equities=EQUITIES.map(e=>({sym:e.sym,name:e.name,shares:e.shares}));
+  const collectibles=COLLECTIBLES.map(c=>({sym:c.sym,name:c.name,qty:c.qty}));
+  const manual=loadMP();
+  return{crypto,equities,collectibles,manual,lastUpdated:new Date().toISOString()};
+}
+
+async function syncToGist(){
+  const token=_getToken();
+  if(!token)return;
+  try{
+    const snapshot=_buildPositionSnapshot();
+    const r=await fetch(`https://api.github.com/gists/${_GIST_ID}`,{
+      method:'PATCH',
+      headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({files:{[_GIST_FILE]:{content:JSON.stringify(snapshot,null,2)}}})
+    });
+    if(r.ok)console.log('[gist-sync] pushed positions to gist');
+    else console.warn('[gist-sync] push failed:',r.status);
+  }catch(e){console.warn('[gist-sync] failed:',e);}
+}
+
+async function syncFromGist(){
+  const token=_getToken();
+  if(!token)return;
+  try{
+    const r=await fetch(`https://api.github.com/gists/${_GIST_ID}`,{
+      headers:{'Authorization':`token ${token}`}
+    });
+    if(!r.ok)return;
+    const data=await r.json();
+    const content=data.files?.[_GIST_FILE]?.content;
+    if(!content)return;
+    const snapshot=JSON.parse(content);
+    if(!snapshot.lastUpdated||snapshot.lastUpdated==='never')return;
+
+    const overrides={};
+    if(snapshot.crypto){
+      snapshot.crypto.forEach(c=>{
+        const hc=CRYPTO.find(x=>x.id===c.id);
+        if(hc&&hc.qty!==c.qty){hc.qty=c.qty;overrides['crypto_'+c.id]=c.qty;}
+      });
+    }
+    if(snapshot.equities){
+      snapshot.equities.forEach(e=>{
+        const he=EQUITIES.find(x=>x.sym===e.sym);
+        if(he&&he.shares!==e.shares){he.shares=e.shares;overrides['equities_'+e.sym]=e.shares;}
+      });
+    }
+    if(snapshot.collectibles){
+      snapshot.collectibles.forEach(c=>{
+        const hc=COLLECTIBLES.find(x=>x.sym===c.sym);
+        if(hc&&hc.qty!==c.qty){hc.qty=c.qty;overrides['collectibles_'+c.sym]=c.qty;}
+      });
+    }
+    const existing=JSON.parse(localStorage.getItem('portfolio-qty-override')||'{}');
+    Object.assign(existing,overrides);
+    localStorage.setItem('portfolio-qty-override',JSON.stringify(existing));
+    if(snapshot.manual){saveMP(snapshot.manual);}
+    console.log('[gist-sync] loaded positions from gist (updated:',snapshot.lastUpdated,')');
+  }catch(e){console.warn('[gist-sync] pull failed:',e);}
+}
+
+// Pull from gist on load (runs after applyOverrides so gist wins)
+syncFromGist().then(()=>renderPortfolio());
 
 /* ══════════════════════════════════════════════════════════════
    MODAL LOGIC (new positions only)
@@ -695,7 +782,7 @@ function savePosition(){
   if(type==='crypto'){const cgid=document.getElementById('mp-cgid').value.trim().toLowerCase();mp.crypto.push({_mpId:id,sym,id:cgid,qty,color,top:document.getElementById('mp-top').checked});if(cgid&&!prices[cgid])fetchAllPrices();}
   else if(type==='equities'){mp.equities.push({_mpId:id,sym,name:document.getElementById('mp-name').value.trim()||sym,shares:qty,proxyKey:document.getElementById('mp-proxy').value.trim()||sym,color,isJpy:document.getElementById('mp-jpy').checked,manualPrice});}
   else{mp.collectibles.push({_mpId:id,name:document.getElementById('mp-name').value.trim()||sym,sym,qty,color,manualPrice,proxyKey:'',floorKey:''});}
-  saveMP(mp);closeModal();renderPortfolio();
+  saveMP(mp);closeModal();renderPortfolio();syncToGist();
 }
 // Migrate
 (function(){const mp=loadMP();let c=false;['crypto','equities','collectibles'].forEach(t=>{mp[t].forEach(item=>{if(!item._mpId){item._mpId='mp_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);c=true;}});});if(c)saveMP(mp);})();
