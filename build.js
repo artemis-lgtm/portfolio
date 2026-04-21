@@ -39,26 +39,26 @@ const loginPage = `<!DOCTYPE html>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0a12">
+<meta name="theme-color" content="#0b0d14">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Inter',-apple-system,sans-serif;background:#0a0a12;color:#e4e4f0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background-image:radial-gradient(ellipse at 20% 50%,rgba(124,58,237,0.05) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(0,229,255,0.03) 0%,transparent 50%);}
-  .login-box{background:#111120;border:1px solid #2a2a44;border-radius:20px;padding:40px;width:380px;max-width:90vw;text-align:center;position:relative;overflow:hidden;}
-  .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#7c3aed,#b388ff,#00e5ff);}
-  .avatar{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#b388ff,#00e5ff);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 20px;box-shadow:0 0 20px rgba(179,136,255,0.3);}
+  body{font-family:'Inter',-apple-system,sans-serif;background:#0b0d14;color:#dadfe8;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background-image:radial-gradient(ellipse at 50% 50%,rgba(107,140,199,0.04) 0%,transparent 60%);}
+  .login-box{background:#13161f;border:1px solid #262a38;border-radius:20px;padding:40px;width:380px;max-width:90vw;text-align:center;position:relative;overflow:hidden;}
+  .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:#4a6ba3;}
+  .avatar{width:64px;height:64px;border-radius:16px;background:#4a6ba3;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 20px;}
   h1{font-size:22px;font-weight:700;margin-bottom:6px;}
-  h1 span{color:#b388ff;}
-  .sub{color:#7878a0;font-size:12px;margin-bottom:28px;}
-  input{width:100%;padding:14px 16px;background:#1a1a2e;border:1px solid #2a2a44;border-radius:10px;color:#e4e4f0;font-size:14px;outline:none;text-align:center;letter-spacing:2px;}
-  input:focus{border-color:#b388ff;box-shadow:0 0 15px rgba(179,136,255,0.15);}
-  input::placeholder{letter-spacing:0;color:#7878a0;}
-  button{width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg,#7c3aed,#b388ff);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
-  button:hover{opacity:0.9;}
-  .err{color:#ff4d6a;font-size:12px;margin-top:12px;min-height:18px;}
-  .spinner{display:none;margin:16px auto 0;width:24px;height:24px;border:3px solid #2a2a44;border-top-color:#b388ff;border-radius:50%;animation:spin 0.6s linear infinite;}
+  h1 span{color:#6b8cc7;}
+  .sub{color:#6b7088;font-size:12px;margin-bottom:28px;}
+  input{width:100%;padding:14px 16px;background:#0f1219;border:1px solid #262a38;border-radius:10px;color:#dadfe8;font-size:14px;outline:none;text-align:center;letter-spacing:2px;}
+  input:focus{border-color:#6b8cc7;box-shadow:0 0 0 3px rgba(107,140,199,0.12);}
+  input::placeholder{letter-spacing:0;color:#6b7088;}
+  button{width:100%;margin-top:16px;padding:14px;background:#4a6ba3;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:background 0.15s ease;}
+  button:hover{background:#5a7ab3;}
+  .err{color:#d66875;font-size:12px;margin-top:12px;min-height:18px;}
+  .spinner{display:none;margin:16px auto 0;width:24px;height:24px;border:3px solid #262a38;border-top-color:#6b8cc7;border-radius:50%;animation:spin 0.6s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
