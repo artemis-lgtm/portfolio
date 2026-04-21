@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0d14">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -109,8 +110,25 @@
   .ie-cancel:hover{color:var(--text);}
   .ie-del{background:rgba(255,77,106,0.15);color:var(--red);margin-left:auto;}
   .ie-del:hover{background:rgba(255,77,106,0.3);}
+  /* Performance chart */
+  .perf-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;}
+  .perf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;}
+  .perf-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px;}
+  .perf-title .perf-asof{font-size:10px;color:var(--text-dim);font-weight:500;letter-spacing:0.5px;}
+  .perf-range{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:8px;}
+  .perf-range-btn{background:none;border:none;padding:6px 12px;font-size:11px;font-weight:700;color:var(--text-dim);cursor:pointer;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px;}
+  .perf-range-btn.active{background:var(--accent2);color:#fff;}
+  .perf-summary{display:flex;gap:20px;font-size:12px;margin-bottom:12px;flex-wrap:wrap;}
+  .perf-summary .k{color:var(--text-dim);margin-right:6px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;}
+  .perf-canvas-wrap{position:relative;height:260px;width:100%;}
+  .perf-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+  .perf-disclaimer{font-size:10px;color:var(--text-dim);margin-top:10px;font-style:italic;}
   @media(max-width:600px){
     body{padding:8px;}
+    .perf-card{padding:12px;}
+    .perf-canvas-wrap{height:200px;}
+    .perf-summary{gap:12px;font-size:11px;}
+    .perf-range-btn{padding:5px 9px;font-size:10px;}
     .hud{flex-direction:column;gap:10px;text-align:center;padding:12px 16px;}
     .hud-right{justify-content:center;flex-wrap:wrap;gap:14px;}
     .hud-stat .val{font-size:16px;}
@@ -150,6 +168,28 @@
     <div class="hud-stat"><div class="val" style="color:var(--yellow);" id="hud-btc-val">--</div><div class="label">BTC Equiv</div></div>
     <div class="hud-stat"><div class="val" id="hud-asset-count">--</div><div class="label">Positions</div></div>
   </div>
+</div>
+
+<div class="perf-card">
+  <div class="perf-head">
+    <div class="perf-title">Portfolio Performance <span class="perf-asof" id="perf-asof"></span></div>
+    <div class="perf-range" id="perf-range">
+      <button class="perf-range-btn" data-range="1M">1M</button>
+      <button class="perf-range-btn" data-range="3M">3M</button>
+      <button class="perf-range-btn" data-range="1Y">1Y</button>
+      <button class="perf-range-btn active" data-range="ALL">ALL</button>
+    </div>
+  </div>
+  <div class="perf-summary">
+    <div><span class="k">Range Return</span><span id="perf-return" style="font-weight:800;">--</span></div>
+    <div><span class="k">Peak</span><span id="perf-peak" style="font-weight:800;">--</span></div>
+    <div><span class="k">Trough</span><span id="perf-trough" style="font-weight:800;">--</span></div>
+  </div>
+  <div class="perf-canvas-wrap">
+    <canvas id="perf-chart"></canvas>
+    <div class="perf-loading" id="perf-loading">Loading history...</div>
+  </div>
+  <div class="perf-disclaimer">Current holdings x historical prices. Counterfactual -- does not reflect actual past trades. Coins/stocks that launched after the chart start date begin when they became available.</div>
 </div>
 
 <div class="goals">
@@ -793,10 +833,227 @@ function savePosition(){
 // Migrate
 (function(){const mp=loadMP();let c=false;['crypto','equities','collectibles'].forEach(t=>{mp[t].forEach(item=>{if(!item._mpId){item._mpId='mp_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);c=true;}});});if(c)saveMP(mp);})();
 
+/* ══════════════════════════════════════════════════════════════
+   PERFORMANCE CHART
+   Option A: current holdings x historical prices (counterfactual).
+   ══════════════════════════════════════════════════════════════ */
+const HIST_TTL_MS = 24*60*60*1000; // 24h cache
+const HIST_START_SEC = Math.floor(Date.UTC(2018,0,1)/1000); // Jan 1 2018 UTC
+let perfSeries = null;
+let perfRange = 'ALL';
+let perfChart = null;
+
+function histCacheGet(key){
+  try{
+    const raw = localStorage.getItem(key);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || !obj.data || Date.now() - obj.fetchedAt > HIST_TTL_MS) return null;
+    return obj.data;
+  }catch(e){return null;}
+}
+function histCacheSet(key, data){
+  try{localStorage.setItem(key, JSON.stringify({fetchedAt: Date.now(), data}));}
+  catch(e){try{/* if quota, clear old hist entries and retry */
+    for(const k of Object.keys(localStorage)) if(k.startsWith('hist_')) localStorage.removeItem(k);
+    localStorage.setItem(key, JSON.stringify({fetchedAt: Date.now(), data}));
+  }catch(e2){console.warn('hist cache write failed:',e2);}}
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function fetchCryptoHistory(id){
+  const key = `hist_cg_${id}`;
+  const cached = histCacheGet(key);
+  if(cached) return cached;
+  try{
+    // days=max on CoinGecko free returns daily granularity automatically for long ranges
+    const r = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=max`);
+    if(!r.ok) return [];
+    const j = await r.json();
+    const data = (j.prices||[]).map(([ts,p])=>[Math.floor(ts/1000), p]);
+    histCacheSet(key, data);
+    return data;
+  }catch(e){console.warn('CG hist fail',id,e); return [];}
+}
+
+async function fetchStockHistory(symbol){
+  const key = `hist_yh_${symbol}`;
+  const cached = histCacheGet(key);
+  if(cached) return cached;
+  const now = Math.floor(Date.now()/1000);
+  const raw = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&period1=${HIST_START_SEC}&period2=${now}`;
+  const proxies = [
+    u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  ];
+  for(const px of proxies){
+    try{
+      const r = await fetch(px(raw));
+      if(!r.ok) continue;
+      const j = await r.json();
+      const ts = j?.chart?.result?.[0]?.timestamp;
+      const closes = j?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+      if(!ts || !closes) continue;
+      const data = ts.map((t,i)=>[t, closes[i]]).filter(([,p])=>p!=null);
+      if(!data.length) continue;
+      histCacheSet(key, data);
+      return data;
+    }catch(e){}
+  }
+  return [];
+}
+
+async function fetchNftHistory(id){
+  const key = `hist_nft_${id}`;
+  const cached = histCacheGet(key);
+  if(cached) return cached;
+  try{
+    const r = await fetch(`https://api.coingecko.com/api/v3/nfts/${id}/market_chart?days=max`);
+    if(!r.ok) return [];
+    const j = await r.json();
+    const floor = j.floor_price_usd || [];
+    const data = floor.map(([ts,p])=>[Math.floor(ts/1000), p]);
+    histCacheSet(key, data);
+    return data;
+  }catch(e){return [];}
+}
+
+async function buildPerfSeries(){
+  const map = {}; // 'YYYY-MM-DD' -> USD value
+  const mp = loadMP();
+  const cryptoAll = [...CRYPTO, ...mp.crypto];
+  const eqAll = [...EQUITIES, ...mp.equities];
+  const nftAll = [...COLLECTIBLES, ...mp.collectibles];
+  const loadingEl = document.getElementById('perf-loading');
+  const total = cryptoAll.length + eqAll.length + nftAll.length;
+  let done = 0;
+  const bump = () => {done++; if(loadingEl) loadingEl.textContent = `Loading history ${done}/${total}...`;};
+
+  // JPY rate for Metaplanet (approx; use latest rate as proxy for all of history -- good enough for chart)
+  let jpyUsdRate = 0.0067;
+  try{
+    const jr = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/JPY=X?interval=1d&range=1d');
+    if(jr.ok){const jj = await jr.json(); const p = jj?.chart?.result?.[0]?.meta?.regularMarketPrice; if(p) jpyUsdRate = 1/p;}
+  }catch(e){}
+
+  for(let i=0;i<cryptoAll.length;i++){
+    const c = cryptoAll[i];
+    if(!c.id || !c.qty) {bump();continue;}
+    const hist = await fetchCryptoHistory(c.id);
+    for(const [ts, price] of hist){
+      if(!price) continue;
+      const k = new Date(ts*1000).toISOString().slice(0,10);
+      map[k] = (map[k]||0) + price * c.qty;
+    }
+    bump();
+    if(i%5===4) await sleep(1100); // gentle pacing for CoinGecko free tier
+  }
+
+  for(const eq of eqAll){
+    const key = eq.proxyKey || eq.sym;
+    if(!key || !(eq.shares||eq.qty)) {bump();continue;}
+    const hist = await fetchStockHistory(key);
+    const rate = eq.isJpy ? jpyUsdRate : 1;
+    const n = eq.shares || eq.qty || 0;
+    for(const [ts, price] of hist){
+      if(!price) continue;
+      const k = new Date(ts*1000).toISOString().slice(0,10);
+      map[k] = (map[k]||0) + price * n * rate;
+    }
+    bump();
+  }
+
+  for(const n of nftAll){
+    const id = n.proxyKey || n.floorKey;
+    if(!id){bump();continue;}
+    const hist = await fetchNftHistory(id);
+    for(const [ts, price] of hist){
+      if(!price) continue;
+      const k = new Date(ts*1000).toISOString().slice(0,10);
+      map[k] = (map[k]||0) + price * (n.qty||1);
+    }
+    bump();
+  }
+
+  const keys = Object.keys(map).sort();
+  return keys.map(k => ({d:k, v:map[k]}));
+}
+
+function filterPerf(range){
+  if(!perfSeries || !perfSeries.length) return [];
+  const now = Date.now();
+  let cutoff = 0;
+  if(range==='1M') cutoff = now - 30*86400*1000;
+  else if(range==='3M') cutoff = now - 90*86400*1000;
+  else if(range==='1Y') cutoff = now - 365*86400*1000;
+  return perfSeries.filter(p => new Date(p.d+'T00:00:00Z').getTime() >= cutoff);
+}
+
+function renderPerfChart(){
+  const data = filterPerf(perfRange);
+  const ctx = document.getElementById('perf-chart');
+  if(!ctx || !data.length) return;
+  const labels = data.map(p => p.d);
+  const values = data.map(p => p.v);
+  const first = values[0], last = values[values.length-1];
+  const peak = Math.max(...values), trough = Math.min(...values);
+  const ret = first ? ((last - first)/first * 100) : 0;
+
+  const retEl = document.getElementById('perf-return');
+  retEl.textContent = (ret>=0?'+':'')+ret.toFixed(1)+'%';
+  retEl.style.color = ret>=0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('perf-peak').textContent = fmt$(peak);
+  document.getElementById('perf-trough').textContent = fmt$(trough);
+  document.getElementById('perf-asof').textContent = `${data[0].d} -> ${data[data.length-1].d}`;
+
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#6b8cc7';
+
+  if(perfChart){perfChart.destroy(); perfChart=null;}
+  perfChart = new Chart(ctx, {
+    type:'line',
+    data:{labels, datasets:[{data:values, borderColor: accent, backgroundColor:'rgba(107,140,199,0.08)', borderWidth:2, tension:0.15, pointRadius:0, pointHoverRadius:4, fill:true}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#6b7088',maxRotation:0,autoSkip:true,maxTicksLimit:8}},
+        y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#6b7088',callback:v=>fmt$(v)}}
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#13161f',borderColor:'#262a38',borderWidth:1,titleColor:'#dadfe8',bodyColor:'#dadfe8',padding:10,displayColors:false,callbacks:{label:c=>fmt$(c.parsed.y)}}
+      }
+    }
+  });
+}
+
+async function initPerfChart(){
+  try{
+    perfSeries = await buildPerfSeries();
+    const loading = document.getElementById('perf-loading');
+    if(loading) loading.style.display = 'none';
+    renderPerfChart();
+    document.querySelectorAll('.perf-range-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        perfRange = btn.dataset.range;
+        document.querySelectorAll('.perf-range-btn').forEach(b => b.classList.toggle('active', b===btn));
+        renderPerfChart();
+      });
+    });
+  }catch(e){
+    console.error('perf chart init failed:', e);
+    const loading = document.getElementById('perf-loading');
+    if(loading) loading.textContent = 'History unavailable';
+  }
+}
+
 /* ── INIT ── */
 async function refresh(){await fetchAllPrices();renderPortfolio();}
 refresh();
 setInterval(refresh,60000);
+// Kick off perf chart after initial render; don't block the main UI
+setTimeout(initPerfChart, 500);
 </script>
 </body>
 </html>
