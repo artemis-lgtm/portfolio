@@ -17,7 +17,7 @@
     --bg:#0b0d14;--surface:#13161f;--surface2:#1a1d28;--border:#262a38;
     --text:#dadfe8;--text-dim:#6b7088;--accent:#6b8cc7;--accent2:#4a6ba3;
     --red:#e06478;--green:#4ade80;--yellow:#e8b84f;--blue:#6b8cc7;
-    --cyan:#5ca4c2;--orange:#d89553;
+    --cyan:#5ca4c2;--orange:#d89553;--light-teal:#a7e8de;
     --glow-accent:0 0 0 1px rgba(107,140,199,0.15);
     --glow-green:0 0 8px rgba(74,222,128,0.2);
   }
@@ -172,12 +172,12 @@
 
 <div class="perf-card">
   <div class="perf-head">
-    <div class="perf-title">Portfolio Performance <span class="perf-asof" id="perf-asof"></span></div>
+    <div class="perf-title">Hypothetical Performance <span class="perf-asof" id="perf-asof"></span></div>
     <div class="perf-range" id="perf-range">
       <button class="perf-range-btn" data-range="1M">1M</button>
       <button class="perf-range-btn" data-range="3M">3M</button>
-      <button class="perf-range-btn" data-range="1Y">1Y</button>
-      <button class="perf-range-btn active" data-range="ALL">ALL</button>
+      <button class="perf-range-btn active" data-range="1Y">1Y</button>
+      <button class="perf-range-btn" data-range="ALL">ALL</button>
     </div>
   </div>
   <div class="perf-summary">
@@ -189,7 +189,7 @@
     <canvas id="perf-chart"></canvas>
     <div class="perf-loading" id="perf-loading">Loading history...</div>
   </div>
-  <div class="perf-disclaimer">Current holdings x historical prices. Counterfactual -- does not reflect actual past trades. Coins/stocks that launched after the chart start date begin when they became available.</div>
+  <div class="perf-disclaimer">Hypothetical: today's holdings valued at past prices. NOT actual portfolio history -- does not reflect trades, deposits, or positions you didn't own yet. Shorter ranges (1M/3M/1Y) are closer to reality.</div>
 </div>
 
 <div class="goals">
@@ -284,68 +284,68 @@
    HOLDINGS — hardcoded baseline
    ══════════════════════════════════════════════════════════════ */
 const CRYPTO=[
-  {id:'bitcoin',sym:'BTC',qty:13.357127,color:'var(--yellow)',top:true},
-  {id:'ethereum',sym:'ETH',qty:41.83,color:'#627eea',top:true},
-  {id:'solana',sym:'SOL',qty:829.13,color:'var(--accent)',top:true},
-  {id:'sui',sym:'SUI',qty:20678,color:'#4da2ff',top:true},
-  {id:'chainlink',sym:'LINK',qty:1754,color:'#2a5ada',top:true},
-  {id:'avalanche-2',sym:'AVAX',qty:866.5,color:'#e84142',top:true},
-  {id:'sei-network',sym:'SEI',qty:71893,color:'#9b1c1c'},
-  {id:'helium',sym:'HNT',qty:3289,color:'#474dff'},
-  {id:'cosmos',sym:'ATOM',qty:972.7,color:'#2e3148'},
-  {id:'hivemapper',sym:'HONEY',qty:760599,color:'#f59e0b'},
-  {id:'akash-network',sym:'AKT',qty:5062,color:'#ff414c'},
-  {id:'decentraland',sym:'MANA',qty:18489,color:'#ff2d55'},
-  {id:'ripple',sym:'XRP',qty:196,color:'#23292f'},
-  {id:'aptos',sym:'APT',qty:1376,color:'#00d4aa'},
-  {id:'basic-attention-token',sym:'BAT',qty:7404,color:'#ff5000'},
-  {id:'spx6900',sym:'SPX',qty:6504,color:'#ff6b6b'},
-  {id:'matic-network',sym:'POL',qty:8300,color:'#8247e5'},
-  {id:'cardano',sym:'ADA',qty:2966,color:'#0033ad'},
-  {id:'filecoin',sym:'FIL',qty:756.40,color:'#0090ff'},
-  {id:'uniswap',sym:'UNI',qty:150,color:'#ff007a'},
-  {id:'polkadot',sym:'DOT',qty:211,color:'#e6007a'},
-  {id:'the-sandbox',sym:'SAND',qty:3676,color:'#04adef'},
-  {id:'injective-protocol',sym:'INJ',qty:81.40,color:'#00f2fe'},
-  {id:'kusama',sym:'KSM',qty:40,color:'#000'},
-  {id:'moonriver',sym:'MOVR',qty:158,color:'#53cbc8'},
-  {id:'api3',sym:'API3',qty:580.50,color:'#fff'},
-  {id:'fetch-ai',sym:'FET',qty:996.80,color:'#1c1c3d'},
-  {id:'dogwifcoin',sym:'WIF',qty:534,color:'#c4a35a'},
-  {id:'popcat',sym:'POPCAT',qty:10405,color:'#f97316'},
-  {id:'gala',sym:'GALA',qty:15406,color:'#fff'},
-  {id:'enjincoin',sym:'ENJ',qty:3194,color:'#624dbf'},
-  {id:'ponke',sym:'PONKE',qty:4213,color:'#8b5cf6'},
-  {id:'kyber-network-crystal',sym:'KNC',qty:916,color:'#31cb9e'},
-  {id:'beam-2',sym:'BEAM',qty:7081,color:'#2d1b69'},
-  {id:'nosana',sym:'NOS',qty:1166,color:'#00d181'},
-  {id:'trustswap',sym:'SWAP',qty:4568,color:'#1b8eff'},
-  {id:'superfarm',sym:'SUPER',qty:3084.70,color:'#f43f5e'},
-  {id:'deep-book-protocol',sym:'DEEP',qty:6914,color:'#3b82f6'},
-  {id:'gigachad-2',sym:'GIGA',qty:296371,color:'#dc2626'},
-  {id:'swissborg',sym:'BORG',qty:3729,color:'#01c38d'},
-  {id:'jupiter-exchange-solana',sym:'JUP',qty:200,color:'#00d395'},
-  {id:'lukso-token',sym:'LYXe',qty:120,color:'#fe3873'},
-  {id:'lofi',sym:'LOFI',qty:31462,color:'#a78bfa'},
-  {id:'coti',sym:'COTI',qty:4956,color:'#1db8c4'},
-  {id:'power-ledger',sym:'POWR',qty:1286,color:'#05bcaa'},
-  {id:'energy-web-token',sym:'EWT',qty:183.80,color:'#a566ff'},
-  {id:'immutable-x',sym:'IMX',qty:847.80,color:'#00b2ff'},
-  {id:'fartcoin',sym:'FART',qty:286,color:'#92400e'},
-  {id:'maple',sym:'MPL',qty:35.20,color:'#00c853'},
-  {id:'altura',sym:'ALU',qty:16949,color:'#ff6b35'},
+  {id:'bitcoin',sym:'BTC',qty:13.357127,color:'var(--light-teal)',top:true},
+  {id:'ethereum',sym:'ETH',qty:41.83,color:'var(--light-teal)',top:true},
+  {id:'solana',sym:'SOL',qty:829.13,color:'var(--light-teal)',top:true},
+  {id:'sui',sym:'SUI',qty:20678,color:'var(--light-teal)',top:true},
+  {id:'chainlink',sym:'LINK',qty:1754,color:'var(--light-teal)',top:true},
+  {id:'avalanche-2',sym:'AVAX',qty:866.5,color:'var(--light-teal)',top:true},
+  {id:'sei-network',sym:'SEI',qty:71893,color:'var(--light-teal)'},
+  {id:'helium',sym:'HNT',qty:3289,color:'var(--light-teal)'},
+  {id:'cosmos',sym:'ATOM',qty:972.7,color:'var(--light-teal)'},
+  {id:'hivemapper',sym:'HONEY',qty:760599,color:'var(--light-teal)'},
+  {id:'akash-network',sym:'AKT',qty:5062,color:'var(--light-teal)'},
+  {id:'decentraland',sym:'MANA',qty:18489,color:'var(--light-teal)'},
+  {id:'ripple',sym:'XRP',qty:196,color:'var(--light-teal)'},
+  {id:'aptos',sym:'APT',qty:1376,color:'var(--light-teal)'},
+  {id:'basic-attention-token',sym:'BAT',qty:7404,color:'var(--light-teal)'},
+  {id:'spx6900',sym:'SPX',qty:6504,color:'var(--light-teal)'},
+  {id:'matic-network',sym:'POL',qty:8300,color:'var(--light-teal)'},
+  {id:'cardano',sym:'ADA',qty:2966,color:'var(--light-teal)'},
+  {id:'filecoin',sym:'FIL',qty:756.40,color:'var(--light-teal)'},
+  {id:'uniswap',sym:'UNI',qty:150,color:'var(--light-teal)'},
+  {id:'polkadot',sym:'DOT',qty:211,color:'var(--light-teal)'},
+  {id:'the-sandbox',sym:'SAND',qty:3676,color:'var(--light-teal)'},
+  {id:'injective-protocol',sym:'INJ',qty:81.40,color:'var(--light-teal)'},
+  {id:'kusama',sym:'KSM',qty:40,color:'var(--light-teal)'},
+  {id:'moonriver',sym:'MOVR',qty:158,color:'var(--light-teal)'},
+  {id:'api3',sym:'API3',qty:580.50,color:'var(--light-teal)'},
+  {id:'fetch-ai',sym:'FET',qty:996.80,color:'var(--light-teal)'},
+  {id:'dogwifcoin',sym:'WIF',qty:534,color:'var(--light-teal)'},
+  {id:'popcat',sym:'POPCAT',qty:10405,color:'var(--light-teal)'},
+  {id:'gala',sym:'GALA',qty:15406,color:'var(--light-teal)'},
+  {id:'enjincoin',sym:'ENJ',qty:3194,color:'var(--light-teal)'},
+  {id:'ponke',sym:'PONKE',qty:4213,color:'var(--light-teal)'},
+  {id:'kyber-network-crystal',sym:'KNC',qty:916,color:'var(--light-teal)'},
+  {id:'beam-2',sym:'BEAM',qty:7081,color:'var(--light-teal)'},
+  {id:'nosana',sym:'NOS',qty:1166,color:'var(--light-teal)'},
+  {id:'trustswap',sym:'SWAP',qty:4568,color:'var(--light-teal)'},
+  {id:'superfarm',sym:'SUPER',qty:3084.70,color:'var(--light-teal)'},
+  {id:'deep-book-protocol',sym:'DEEP',qty:6914,color:'var(--light-teal)'},
+  {id:'gigachad-2',sym:'GIGA',qty:296371,color:'var(--light-teal)'},
+  {id:'swissborg',sym:'BORG',qty:3729,color:'var(--light-teal)'},
+  {id:'jupiter-exchange-solana',sym:'JUP',qty:200,color:'var(--light-teal)'},
+  {id:'lukso-token',sym:'LYXe',qty:120,color:'var(--light-teal)'},
+  {id:'lofi',sym:'LOFI',qty:31462,color:'var(--light-teal)'},
+  {id:'coti',sym:'COTI',qty:4956,color:'var(--light-teal)'},
+  {id:'power-ledger',sym:'POWR',qty:1286,color:'var(--light-teal)'},
+  {id:'energy-web-token',sym:'EWT',qty:183.80,color:'var(--light-teal)'},
+  {id:'immutable-x',sym:'IMX',qty:847.80,color:'var(--light-teal)'},
+  {id:'fartcoin',sym:'FART',qty:286,color:'var(--light-teal)'},
+  {id:'maple',sym:'MPL',qty:35.20,color:'var(--light-teal)'},
+  {id:'altura',sym:'ALU',qty:16949,color:'var(--light-teal)'},
 ];
 
 const EQUITIES=[
-  {sym:'TSLA',name:'Tesla',shares:150,proxyKey:'TSLA',color:'#e31937'},
-  {sym:'MSTR',name:'Strategy',shares:150,proxyKey:'MSTR',color:'var(--blue)'},
-  {sym:'GME',name:'GameStop',shares:250,proxyKey:'GME',color:'#ff0000'},
-  {sym:'GME+',name:'GME+',shares:30,proxyKey:'GME',color:'#ff0000'},
-  {sym:'Metaplanet',name:'Metaplanet',shares:3000,proxyKey:'3350.T',color:'var(--cyan)',isJpy:true},
+  {sym:'TSLA',name:'Tesla',shares:150,proxyKey:'TSLA',color:'var(--light-teal)'},
+  {sym:'MSTR',name:'Strategy',shares:150,proxyKey:'MSTR',color:'var(--light-teal)'},
+  {sym:'GME',name:'GameStop',shares:250,proxyKey:'GME',color:'var(--light-teal)'},
+  {sym:'GME+',name:'GME+',shares:30,proxyKey:'GME',color:'var(--light-teal)'},
+  {sym:'Metaplanet',name:'Metaplanet',shares:3000,proxyKey:'3350.T',color:'var(--light-teal)',isJpy:true},
 ];
 
 const COLLECTIBLES=[
-  {name:'Bored Ape Yacht Club',sym:'BAYC',qty:1,proxyKey:'bored-ape-yacht-club',color:'#f59e0b'}
+  {name:'Bored Ape Yacht Club',sym:'BAYC',qty:1,proxyKey:'bored-ape-yacht-club',color:'var(--light-teal)'}
 ];
 
 /* ══════════════════════════════════════════════════════════════
@@ -840,7 +840,7 @@ function savePosition(){
 const HIST_TTL_MS = 24*60*60*1000; // 24h cache
 const HIST_START_SEC = Math.floor(Date.UTC(2018,0,1)/1000); // Jan 1 2018 UTC
 let perfSeries = null;
-let perfRange = 'ALL';
+let perfRange = '1Y';
 let perfChart = null;
 
 function histCacheGet(key){
