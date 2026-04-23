@@ -920,7 +920,11 @@ async function fetchNftHistory(id){
 }
 
 async function buildPerfSeries(){
-  const map = {}; // 'YYYY-MM-DD' -> USD value
+  // Build per-asset {date -> value_usd_for_that_day} maps first (last-price-wins
+  // per day, so multi-intraday points don't overcount). Then union all dates,
+  // forward-fill each asset from its first available date, and sum across assets.
+  // This fixes the old bug where days missing an asset's datapoint silently
+  // dropped that asset's entire weight for that day, making the total 5-10x low.
   const mp = loadMP();
   const cryptoAll = [...CRYPTO, ...mp.crypto];
   const eqAll = [...EQUITIES, ...mp.equities];
@@ -930,37 +934,44 @@ async function buildPerfSeries(){
   let done = 0;
   const bump = () => {done++; if(loadingEl) loadingEl.textContent = `Loading history ${done}/${total}...`;};
 
-  // JPY rate for Metaplanet (approx; use latest rate as proxy for all of history -- good enough for chart)
+  // JPY rate for Metaplanet (approx; use latest rate as proxy -- good enough for chart)
   let jpyUsdRate = 0.0067;
   try{
     const jr = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/JPY=X?interval=1d&range=1d');
     if(jr.ok){const jj = await jr.json(); const p = jj?.chart?.result?.[0]?.meta?.regularMarketPrice; if(p) jpyUsdRate = 1/p;}
   }catch(e){}
 
+  const assetSeries = []; // [{daily: Map<YYYY-MM-DD, usdValue>, firstDate: string}]
+  const buildDaily = (hist, mult) => {
+    const daily = new Map();
+    for(const [ts, price] of hist){
+      if(!price) continue;
+      const k = new Date(ts*1000).toISOString().slice(0,10);
+      daily.set(k, price * mult); // last-write-wins per day, prevents multi-intraday overcount
+    }
+    return daily;
+  };
+
+  // Cryptos: pace one request every 2.2s to stay under CoinGecko free-tier ~30/min.
+  // (Was 5/sec-ish before -> most coins silently returned empty due to 429s.)
   for(let i=0;i<cryptoAll.length;i++){
     const c = cryptoAll[i];
     if(!c.id || !c.qty) {bump();continue;}
     const hist = await fetchCryptoHistory(c.id);
-    for(const [ts, price] of hist){
-      if(!price) continue;
-      const k = new Date(ts*1000).toISOString().slice(0,10);
-      map[k] = (map[k]||0) + price * c.qty;
-    }
+    const daily = buildDaily(hist, c.qty);
+    if(daily.size) assetSeries.push({daily, firstDate: [...daily.keys()].sort()[0]});
     bump();
-    if(i%5===4) await sleep(1100); // gentle pacing for CoinGecko free tier
+    if(i < cryptoAll.length - 1) await sleep(2200);
   }
 
   for(const eq of eqAll){
     const key = eq.proxyKey || eq.sym;
-    if(!key || !(eq.shares||eq.qty)) {bump();continue;}
+    const n = eq.shares || eq.qty || 0;
+    if(!key || !n) {bump();continue;}
     const hist = await fetchStockHistory(key);
     const rate = eq.isJpy ? jpyUsdRate : 1;
-    const n = eq.shares || eq.qty || 0;
-    for(const [ts, price] of hist){
-      if(!price) continue;
-      const k = new Date(ts*1000).toISOString().slice(0,10);
-      map[k] = (map[k]||0) + price * n * rate;
-    }
+    const daily = buildDaily(hist, n * rate);
+    if(daily.size) assetSeries.push({daily, firstDate: [...daily.keys()].sort()[0]});
     bump();
   }
 
@@ -968,16 +979,35 @@ async function buildPerfSeries(){
     const id = n.proxyKey || n.floorKey;
     if(!id){bump();continue;}
     const hist = await fetchNftHistory(id);
-    for(const [ts, price] of hist){
-      if(!price) continue;
-      const k = new Date(ts*1000).toISOString().slice(0,10);
-      map[k] = (map[k]||0) + price * (n.qty||1);
-    }
+    const daily = buildDaily(hist, n.qty || 1);
+    if(daily.size) assetSeries.push({daily, firstDate: [...daily.keys()].sort()[0]});
     bump();
   }
 
-  const keys = Object.keys(map).sort();
-  return keys.map(k => ({d:k, v:map[k]}));
+  if(!assetSeries.length) return [];
+
+  // Union of all dates across every asset that returned data.
+  const allDatesSet = new Set();
+  for(const a of assetSeries) for(const k of a.daily.keys()) allDatesSet.add(k);
+  const allDates = [...allDatesSet].sort();
+
+  // For each asset, forward-fill from its first known date across the grid.
+  // Before firstDate, asset contributes 0 (coin/stock didn't exist or no data yet).
+  const out = allDates.map(d => ({d, v: 0}));
+  for(const a of assetSeries){
+    let last = 0;
+    let started = false;
+    for(let i = 0; i < allDates.length; i++){
+      const d = allDates[i];
+      if(!started){
+        if(d < a.firstDate) continue;
+        started = true;
+      }
+      if(a.daily.has(d)) last = a.daily.get(d);
+      out[i].v += last;
+    }
+  }
+  return out;
 }
 
 function filterPerf(range){
