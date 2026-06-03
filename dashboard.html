@@ -543,7 +543,7 @@ function renderPortfolio(){
   // STATUS
   const now=new Date();
   const ts=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'America/New_York'});
-  document.getElementById('price-status').innerHTML=`<span class="live-dot"></span><span style="color:var(--green);">LIVE</span> ${ts}`;
+  document.getElementById('price-status').innerHTML=`<span class="live-dot"></span><span style="color:var(--green);">LIVE</span> ${ts}${_renderLastSync()}`;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -666,12 +666,17 @@ function inlineDelete(type,mpId){
    GIST SYNC — positions cloud-sync so Artemis can see edits
    Token stored in localStorage (enter once, persists forever)
    ══════════════════════════════════════════════════════════════ */
-const _GIST_ID='d3b25b7f74a717ad7980eaa264ac1f04';
-const _GIST_FILE='positions.json';
+const _GIST_ID='9cae39555a71abfb0ac6028969c731ba';
+const _GIST_FILE='current-positions.json';
 const _TOKEN_KEY='portfolio-sync-token';
+const _LAST_SYNC_KEY='portfolio-last-sync';
 
 function _getToken(){return localStorage.getItem(_TOKEN_KEY);}
 function _setToken(t){localStorage.setItem(_TOKEN_KEY,t);}
+
+let _syncTimer=null;
+function syncToGist(){if(_syncTimer)clearTimeout(_syncTimer);_syncTimer=setTimeout(_syncToGistNow,5000);}
+function _renderLastSync(){const t=localStorage.getItem(_LAST_SYNC_KEY);if(!t)return'';const d=new Date(t);const hhmm=d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York'});return` <span style="color:var(--text-dim);">· Synced ${hhmm}</span>`;}
 
 function setupSyncToken(){
   const existing=_getToken();
@@ -687,7 +692,7 @@ function _buildPositionSnapshot(){
   return{crypto,equities,collectibles,manual,lastUpdated:new Date().toISOString()};
 }
 
-async function syncToGist(){
+async function _syncToGistNow(){
   const token=_getToken();
   if(!token){console.warn('[gist-sync] no token');return;}
   try{
@@ -699,9 +704,10 @@ async function syncToGist(){
     });
     if(r.ok){
       console.log('[gist-sync] pushed positions to gist');
-      // Brief visual confirmation
-      const el=document.querySelector('.live-dot');
-      if(el){const orig=el.textContent;el.textContent='SYNCED';setTimeout(()=>el.textContent=orig,1500);}
+      localStorage.setItem(_LAST_SYNC_KEY,new Date().toISOString());
+      const ps=document.getElementById('price-status');
+      if(ps&&!ps.innerHTML.includes('Synced'))ps.innerHTML+=_renderLastSync();
+      else if(ps)ps.innerHTML=ps.innerHTML.replace(/ <span style="color:var\(--text-dim\);">· Synced [^<]+<\/span>/,_renderLastSync());
     }else{
       const body=await r.text();
       console.warn('[gist-sync] push failed:',r.status,body);
