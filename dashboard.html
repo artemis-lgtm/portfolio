@@ -302,6 +302,7 @@ const EQUITIES=[
   {sym:'GME',name:'GameStop',shares:250,proxyKey:'GME',color:'var(--light-teal)'},
   {sym:'GME+',name:'GME+',shares:30,proxyKey:'GME',color:'var(--light-teal)'},
   {sym:'Metaplanet',name:'Metaplanet',shares:3000,proxyKey:'3350.T',color:'var(--light-teal)',isJpy:true},
+  {sym:'BMNR',name:'BitMine Immersion',shares:100,proxyKey:'BMNR',color:'var(--light-teal)'},
 ];
 
 const COLLECTIBLES=[
@@ -389,7 +390,7 @@ async function fetchNftFloor(){
 
 // Stocks: try Yahoo Finance via corsproxy.io (free CORS proxy)
 async function fetchStocks(){
-  const tickers=['TSLA','MSTR','GME','3350.T'];
+  const tickers=['TSLA','MSTR','GME','3350.T','BMNR'];
   // Try corsproxy.io first (reliable free CORS proxy)
   const proxyUrls=[
     t=>`https://corsproxy.io/?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`)}`,
