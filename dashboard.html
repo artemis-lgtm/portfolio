@@ -161,7 +161,7 @@
   </div>
   <div class="goal-box sol">
     <div class="goal-label" style="color:var(--accent);">Short-Term Goal</div>
-    <div class="goal-val" style="color:var(--accent);">1,000 SOL</div>
+    <div class="goal-val" style="color:var(--accent);">2,000 SOL</div>
     <div class="goal-sub" id="sol-goal-text">Loading...</div>
     <div class="goal-track"><div class="goal-fill" id="sol-goal-bar" style="width:0%;background:var(--accent);"></div></div>
   </div>
@@ -535,7 +535,7 @@ function renderPortfolio(){
   document.getElementById('btc-goal-text').textContent=`Currently: ${totalBtcEquiv.toFixed(2)} BTC equiv -- ${btcPct}% complete`;
   document.getElementById('btc-goal-bar').style.width=btcPct+'%';
   const totalSol=allCrypto.filter(c=>c.sym==='SOL').reduce((a,c)=>a+c.qty,0);
-  const solPct=Math.min(Math.round((totalSol/1000)*100),100);
+  const solPct=Math.min(Math.round((totalSol/2000)*100),100);
   document.getElementById('sol-goal-text').textContent=`${totalSol.toFixed(2)} SOL -- ${solPct}% complete`;
   document.getElementById('sol-goal-bar').style.width=solPct+'%';
 
