@@ -38,12 +38,19 @@
   .hud-stat{text-align:center;}
   .hud-stat .val{font-size:18px;font-weight:800;}
   .hud-stat .label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-  .total-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:26px 24px;margin-bottom:24px;text-align:center;position:relative;overflow:hidden;}
-  .total-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--accent2);}
-  .total-val{font-size:clamp(34px,9vw,60px);font-weight:900;letter-spacing:-1.5px;line-height:1.05;
-    font-variant-numeric:tabular-nums;}
-  .total-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-top:8px;}
+  /* The summary card. It is the one box that is not just another card, so it
+     gets its own ground, an accent-lit rim and a soft bloom underneath. */
+  .hud.summary{display:block;padding:18px 14px 20px;
+    background:linear-gradient(170deg,var(--surface2) 0%,var(--surface) 62%);
+    border-color:rgba(107,140,199,0.28);
+    box-shadow:0 0 0 1px rgba(107,140,199,0.06),0 18px 44px -28px rgba(107,140,199,0.55);}
+  .hud.summary::before{background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+  .hud.summary .hud-left{justify-content:center;padding:0 10px;}
+  .total-wrap{margin-top:14px;text-align:center;}
+  /* font-size is set by fitTotal() so the figure reaches both edges */
+  .total-val{font-size:56px;font-weight:300;letter-spacing:-0.02em;line-height:1;white-space:nowrap;
+    font-variant-numeric:tabular-nums;display:block;}
+  .total-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:3px;margin-top:10px;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;}
   .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
@@ -143,7 +150,7 @@
 </head>
 <body>
 
-<div class="hud">
+<div class="hud summary">
   <div class="hud-left">
     <div class="hud-avatar">A</div>
     <div class="hud-info">
@@ -151,11 +158,10 @@
       <div class="subtitle"><span class="online-pulse"></span> Live Tracking</div>
     </div>
   </div>
-</div>
-
-<div class="total-box">
-  <div class="total-val" id="hud-total-val">--</div>
-  <div class="total-label">Total Value</div>
+  <div class="total-wrap">
+    <div class="total-val" id="hud-total-val">--</div>
+    <div class="total-label">Total Value</div>
+  </div>
 </div>
 
 <div class="goals">
@@ -332,6 +338,15 @@ function saveMP(mp){localStorage.setItem(MP_KEY,JSON.stringify(mp));}
 /* ── Formatting ── */
 function fmt$(n){if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1000)return'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});if(n>=1)return'$'+n.toFixed(2);return'$'+n.toFixed(4);}
 function fmt$exact(n){return '$'+Math.round(n).toLocaleString('en-US');}
+// Size the total so it spans the card edge to edge whatever the digit count is.
+function fitTotal(){
+  const el=document.getElementById('hud-total-val');if(!el)return;
+  const avail=el.parentElement.clientWidth;if(!avail)return;
+  el.style.fontSize='100px';
+  const w=el.scrollWidth;if(!w)return;
+  el.style.fontSize=Math.max(24,Math.min(150,Math.floor(100*avail/w)))+'px';
+}
+window.addEventListener('resize',fitTotal);
 function fmtBtc(n){return n>=0.01?n.toFixed(2):n.toFixed(4);}
 
 /* ── Tabs ── */
@@ -533,6 +548,7 @@ function renderPortfolio(){
   document.getElementById('total-value').textContent=fmt$(grandTotal);
   document.getElementById('total-equiv').textContent=fmtBtc(grandTotal/btcPrice)+' BTC';
   document.getElementById('hud-total-val').textContent=fmt$exact(grandTotal);
+  fitTotal();
 
   // GOALS
   const totalBtcEquiv=grandTotal/btcPrice;
