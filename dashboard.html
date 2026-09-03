@@ -346,7 +346,7 @@ function fmt$exact(n){return '$'+Math.round(n).toLocaleString('en-US');}
 // Size the total so it spans the card edge to edge whatever the digit count is.
 function fitTotal(){
   const el=document.getElementById('hud-total-val');if(!el)return;
-  const avail=el.parentElement.clientWidth*0.90;if(!avail)return;
+  const avail=el.parentElement.clientWidth*0.63;if(!avail)return;
   el.style.fontSize='100px';
   const w=el.scrollWidth;if(!w)return;
   el.style.fontSize=Math.max(24,Math.min(150,Math.floor(100*avail/w)))+'px';

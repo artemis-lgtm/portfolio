@@ -1,10 +1,10 @@
 {
   "collection": "ms_portfolio_12537a1f",
   "failed_files": [],
-  "last_completed_at": "2026-09-03T18:50:41.958336Z",
+  "last_completed_at": "2026-09-03T19:03:41.628431Z",
   "last_error": "RuntimeError: Could not open the local Milvus database at /Users/artemis/.memsearch/milvus.db: <ConnectionConfigException: (code=1, message=Open local milvus failed)>. This can happen if another process already has the database open, if file permissions are wrong, or if the file is damaged. Close other processes using this database and verify that the path is writable. If the problem continues, preserve the database and inspect the application logs before attempting recovery.",
-  "last_failed_at": "2026-09-03T18:50:41.958336Z",
-  "last_started_at": "2026-09-03T18:50:39.585457Z",
+  "last_failed_at": "2026-09-03T19:03:41.628431Z",
+  "last_started_at": "2026-09-03T19:03:39.502406Z",
   "milvus_uri": "~/.memsearch/milvus.db",
   "operation": "index",
   "paths": [
@@ -12,5 +12,5 @@
   ],
   "schema_version": 1,
   "status": "error",
-  "updated_at": "2026-09-03T18:50:41.958336Z"
+  "updated_at": "2026-09-03T19:03:41.628431Z"
 }
