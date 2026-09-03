@@ -38,6 +38,7 @@
   .hud-stat{text-align:center;}
   .hud-stat .val{font-size:18px;font-weight:800;}
   .hud-stat .label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+  .hud-stat .btc-sub{font-size:11px;font-weight:700;color:var(--yellow);margin-top:3px;letter-spacing:0.2px;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;}
   .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
@@ -146,8 +147,11 @@
     </div>
   </div>
   <div class="hud-right">
-    <div class="hud-stat"><div class="val" id="hud-total-val">--</div><div class="label">Total Value</div></div>
-    <div class="hud-stat"><div class="val" style="color:var(--yellow);" id="hud-btc-val">--</div><div class="label">BTC Equiv</div></div>
+    <div class="hud-stat">
+      <div class="val" id="hud-total-val">--</div>
+      <div class="btc-sub" id="hud-btc-val">--</div>
+      <div class="label">Total Value</div>
+    </div>
     <div class="hud-stat"><div class="val" id="hud-asset-count">--</div><div class="label">Positions</div></div>
   </div>
 </div>
@@ -325,6 +329,7 @@ function saveMP(mp){localStorage.setItem(MP_KEY,JSON.stringify(mp));}
 
 /* ── Formatting ── */
 function fmt$(n){if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1000)return'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});if(n>=1)return'$'+n.toFixed(2);return'$'+n.toFixed(4);}
+function fmt$exact(n){return '$'+Math.round(n).toLocaleString('en-US');}
 function fmtBtc(n){return n>=0.01?n.toFixed(2):n.toFixed(4);}
 
 /* ── Tabs ── */
@@ -525,8 +530,8 @@ function renderPortfolio(){
   // TOTALS
   document.getElementById('total-value').textContent=fmt$(grandTotal);
   document.getElementById('total-equiv').textContent=fmtBtc(grandTotal/btcPrice)+' BTC';
-  document.getElementById('hud-total-val').textContent=fmt$(grandTotal);
-  document.getElementById('hud-btc-val').textContent=fmtBtc(grandTotal/btcPrice);
+  document.getElementById('hud-total-val').textContent=fmt$exact(grandTotal);
+  document.getElementById('hud-btc-val').textContent=fmtBtc(grandTotal/btcPrice)+' BTC';
   document.getElementById('hud-asset-count').textContent=totalPositions;
 
   // GOALS
