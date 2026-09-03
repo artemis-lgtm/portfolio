@@ -46,11 +46,17 @@
     box-shadow:0 0 0 1px rgba(107,140,199,0.06),0 18px 44px -28px rgba(107,140,199,0.55);}
   .hud.summary::before{background:linear-gradient(90deg,transparent,var(--accent),transparent);}
   .hud.summary .hud-left{justify-content:center;padding:0 10px;}
-  .total-wrap{margin-top:14px;text-align:center;}
+  .total-wrap{margin-top:14px;margin-bottom:4px;text-align:center;}
   /* font-size is set by fitTotal() so the figure reaches both edges */
   .total-val{font-size:56px;font-weight:300;letter-spacing:-0.02em;line-height:1;white-space:nowrap;
     font-variant-numeric:tabular-nums;display:block;}
-  .total-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:3px;margin-top:10px;}
+  /* every refresh writes the figure; the pulse is how you can see it tick */
+  .total-val.up{animation:tickUp 0.9s ease-out;}
+  .total-val.down{animation:tickDown 0.9s ease-out;}
+  .total-val.same{animation:tickSame 0.9s ease-out;}
+  @keyframes tickUp{0%{color:var(--green);text-shadow:0 0 22px rgba(74,222,128,0.45);}100%{color:var(--text);text-shadow:none;}}
+  @keyframes tickDown{0%{color:var(--red);text-shadow:0 0 22px rgba(224,100,120,0.45);}100%{color:var(--text);text-shadow:none;}}
+  @keyframes tickSame{0%{opacity:0.45;}100%{opacity:1;}}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;}
   .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
@@ -160,7 +166,6 @@
   </div>
   <div class="total-wrap">
     <div class="total-val" id="hud-total-val">--</div>
-    <div class="total-label">Total Value</div>
   </div>
 </div>
 
@@ -341,10 +346,21 @@ function fmt$exact(n){return '$'+Math.round(n).toLocaleString('en-US');}
 // Size the total so it spans the card edge to edge whatever the digit count is.
 function fitTotal(){
   const el=document.getElementById('hud-total-val');if(!el)return;
-  const avail=el.parentElement.clientWidth;if(!avail)return;
+  const avail=el.parentElement.clientWidth*0.90;if(!avail)return;
   el.style.fontSize='100px';
   const w=el.scrollWidth;if(!w)return;
   el.style.fontSize=Math.max(24,Math.min(150,Math.floor(100*avail/w)))+'px';
+}
+let _lastTotal=null;
+function paintTotal(n){
+  const el=document.getElementById('hud-total-val');if(!el)return;
+  el.textContent=fmt$exact(n);
+  fitTotal();
+  const cls=_lastTotal===null?'same':(n>_lastTotal?'up':(n<_lastTotal?'down':'same'));
+  _lastTotal=n;
+  el.classList.remove('up','down','same');
+  void el.offsetWidth;
+  el.classList.add(cls);
 }
 window.addEventListener('resize',fitTotal);
 function fmtBtc(n){return n>=0.01?n.toFixed(2):n.toFixed(4);}
@@ -547,8 +563,7 @@ function renderPortfolio(){
   // TOTALS
   document.getElementById('total-value').textContent=fmt$(grandTotal);
   document.getElementById('total-equiv').textContent=fmtBtc(grandTotal/btcPrice)+' BTC';
-  document.getElementById('hud-total-val').textContent=fmt$exact(grandTotal);
-  fitTotal();
+  paintTotal(grandTotal);
 
   // GOALS
   const totalBtcEquiv=grandTotal/btcPrice;
@@ -825,7 +840,7 @@ function savePosition(){
 /* ── INIT ── */
 async function refresh(){await fetchAllPrices();renderPortfolio();}
 refresh();
-setInterval(refresh,60000);
+setInterval(refresh,30000);
 </script>
 </body>
 </html>
