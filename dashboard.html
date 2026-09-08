@@ -426,52 +426,37 @@ async function fetchNftFloor(){
   }catch(e){console.warn('NFT floor fail:',e);}
 }
 
-// Stocks: try Yahoo Finance via corsproxy.io (free CORS proxy)
+// Stocks: our own price endpoint (2026-09-08).
+// Was two free public CORS proxies against Yahoo. Both died on the same day —
+// corsproxy.io went paid and 401s, api.allorigins.win flapped 522s (five tickers in
+// one pass: one 200, four 522). Yahoo itself was fine, it just sends no CORS headers,
+// so the browser could never call it without a middleman.
+// https://portfolio-prices.vercel.app is that middleman, ours: Nasdaq for the US
+// listings, Yahoo Japan for the Tokyo one, live USD/JPY, and per-symbol error
+// reporting so a missing price can never render as $0.
+const PRICE_API='https://portfolio-prices.vercel.app/quotes';
+let stockMissing=[];
 async function fetchStocks(){
   const tickers=['TSLA','MSTR','GME','3350.T','BMNR'];
-  // Try corsproxy.io first (reliable free CORS proxy)
-  const proxyUrls=[
-    t=>`https://corsproxy.io/?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`)}`,
-    t=>`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`)}`,
-  ];
-  let succeeded=false;
-  for(const mkUrl of proxyUrls){
-    if(succeeded)break;
-    try{
-      const results=await Promise.allSettled(tickers.map(async t=>{
-        const r=await fetch(mkUrl(t),{signal:AbortSignal.timeout(8000)});
-        if(!r.ok)throw new Error(r.status);
-        const d=await r.json();
-        const meta=d.chart?.result?.[0]?.meta;
-        if(!meta)throw new Error('no meta');
-        return{ticker:t,price:meta.regularMarketPrice,currency:meta.currency};
-      }));
-      let anyOk=false;
-      results.forEach(r=>{
-        if(r.status==='fulfilled'){
-          const{ticker,price,currency}=r.value;
-          const isJpy=currency==='JPY';
-          const key=ticker.replace('.','_');
-          stockPrices[ticker]={price,currency};
-          if(isJpy){
-            // Rough JPY->USD (will update with forex if available)
-            stockPrices[ticker].price_usd=price/150;
-          }
-          anyOk=true;
-        }
-      });
-      if(anyOk){succeeded=true;stockSource='yahoo';}
-    }catch(e){continue;}
-  }
-  if(!succeeded){
-    stockSource='manual';
-    // Use cached/manual prices as fallback
-    const cached=JSON.parse(localStorage.getItem('portfolio-stock-cache')||'{}');
-    Object.assign(stockPrices,cached);
-  }else{
-    // Cache successful prices
-    localStorage.setItem('portfolio-stock-cache',JSON.stringify(stockPrices));
-  }
+  try{
+    const r=await fetch(`${PRICE_API}?symbols=${encodeURIComponent(tickers.join(','))}`,
+                        {signal:AbortSignal.timeout(12000)});
+    if(!r.ok)throw new Error('http '+r.status);
+    const d=await r.json();
+    const got=d.quotes||{};
+    if(Object.keys(got).length){
+      Object.assign(stockPrices,got);
+      stockMissing=d.missing||[];
+      // The old code set this on ANY single success, which is how four dead tickers
+      // rendered as $0.0000 under a LIVE badge. Only a whole set is "live" now.
+      stockSource=d.complete?'live':'partial';
+      localStorage.setItem('portfolio-stock-cache',JSON.stringify(stockPrices));
+      return;
+    }
+    stockMissing=d.missing||tickers;
+  }catch(e){ stockMissing=tickers; }
+  stockSource='manual';
+  Object.assign(stockPrices,JSON.parse(localStorage.getItem('portfolio-stock-cache')||'{}'));
 }
 
 async function fetchAllPrices(){
@@ -525,8 +510,9 @@ function renderPortfolio(){
   let eqTotal=0;
   const allEq=[...EQUITIES,...mp.equities.map(e=>({...e,_manual:true}))];
   const noteEl=document.getElementById('stock-note');
-  if(stockSource==='yahoo')noteEl.textContent='Live prices via Yahoo Finance';
-  else if(stockSource==='manual')noteEl.textContent='Using cached/manual prices (live fetch unavailable)';
+  if(stockSource==='live')noteEl.textContent='Live prices, all symbols current';
+  else if(stockSource==='partial')noteEl.textContent='Live, except '+stockMissing.join(', ')+'. Those rows have no current price.';
+  else if(stockSource==='manual')noteEl.textContent='Using cached prices (live fetch unavailable)';
   else noteEl.textContent='Loading stock prices...';
 
   allEq.forEach(e=>{
