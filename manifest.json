@@ -1,6 +1,6 @@
 {
-  "name": "Artemis Portfolio",
-  "short_name": "Portfolio",
+  "name": "Liquid Portfolio",
+  "short_name": "Liquid",
   "description": "Live portfolio tracker",
   "start_url": "./index.html",
   "display": "standalone",

@@ -35,7 +35,7 @@ const loginPage = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Portfolio</title>
+<title>Liquid Portfolio</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -65,7 +65,7 @@ const loginPage = `<!DOCTYPE html>
 <body>
 <div class="login-box" id="login-box">
   <div class="avatar">A</div>
-  <h1>Artemis <span>Portfolio</span></h1>
+  <h1>Liquid <span>Portfolio</span></h1>
   <div class="sub">Enter password to continue</div>
   <form onsubmit="unlock(event)">
     <input type="password" id="pw" placeholder="Password" autofocus autocomplete="off">
