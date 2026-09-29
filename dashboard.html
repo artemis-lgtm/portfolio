@@ -483,14 +483,30 @@ async function fetchCrypto(){
   const mp=loadMP();
   const manualIds=mp.crypto.filter(c=>c.id).map(c=>c.id);
   const allIds=[...new Set([...CRYPTO.map(c=>c.id),...manualIds])];
-  // CoinGecko limits ~250 ids per call, we have ~50, fine
+  // 2026-09-29: CoinGecko's keyless /simple/price now answers 403 "Request blocked"
+  // (CloudFront) from browsers and servers alike, which blanked the crypto tab.
+  // DefiLlama takes the same CoinGecko ids, needs no key, and sends CORS *, so it is
+  // primary now. A few ids are renamed on its side (LLAMA_ALIAS). CoinGecko stays as
+  // a fallback for anything DefiLlama did not price, in case the block lifts.
   try{
-    const r=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${allIds.join(',')}&vs_currencies=usd`);
+    const q=allIds.map(id=>'coingecko:'+(LLAMA_ALIAS[id]||id)).join(',');
+    const r=await fetch(`https://coins.llama.fi/prices/current/${q}`);
+    if(!r.ok)throw new Error(r.status);
+    const d=(await r.json()).coins||{};
+    allIds.forEach(id=>{const v=d['coingecko:'+(LLAMA_ALIAS[id]||id)];if(v&&typeof v.price==='number')prices[id]=v.price;});
+  }catch(e){console.warn('DefiLlama price fail:',e);}
+  const missing=allIds.filter(id=>prices[id]==null);
+  if(!missing.length)return;
+  try{
+    const r=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${missing.join(',')}&vs_currencies=usd`);
     if(!r.ok)throw new Error(r.status);
     const d=await r.json();
     Object.entries(d).forEach(([id,v])=>{prices[id]=v.usd;});
   }catch(e){console.warn('CoinGecko price fail:',e);}
 }
+// CoinGecko id on the dashboard -> the id DefiLlama knows the same token by.
+// matic-network was retired into POL; LYXe migrated 1:1 to LYX.
+const LLAMA_ALIAS={'matic-network':'polygon-ecosystem-token','lukso-token':'lukso-token-2'};
 
 async function fetchNftFloor(){
   try{
