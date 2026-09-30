@@ -493,7 +493,7 @@ async function fetchCrypto(){
     const r=await fetch(`https://coins.llama.fi/prices/current/${q}`);
     if(!r.ok)throw new Error(r.status);
     const d=(await r.json()).coins||{};
-    allIds.forEach(id=>{const v=d['coingecko:'+(LLAMA_ALIAS[id]||id)];if(v&&typeof v.price==='number')prices[id]=v.price;});
+    allIds.forEach(id=>{const v=d['coingecko:'+(LLAMA_ALIAS[id]||id)];if(v&&typeof v.price==='number')prices[id]=v.price*(LLAMA_MULT[id]||1);});
   }catch(e){console.warn('DefiLlama price fail:',e);}
   const missing=allIds.filter(id=>prices[id]==null);
   if(!missing.length)return;
@@ -506,7 +506,9 @@ async function fetchCrypto(){
 }
 // CoinGecko id on the dashboard -> the id DefiLlama knows the same token by.
 // matic-network was retired into POL; LYXe migrated 1:1 to LYX.
-const LLAMA_ALIAS={'matic-network':'polygon-ecosystem-token','lukso-token':'lukso-token-2'};
+const LLAMA_ALIAS={'matic-network':'polygon-ecosystem-token','lukso-token':'lukso-token-2','maple':'syrup'};
+// MPL migrated to SYRUP at a fixed 1:100, so one MPL is worth 100 SYRUP.
+const LLAMA_MULT={'maple':100};
 
 async function fetchNftFloor(){
   try{
