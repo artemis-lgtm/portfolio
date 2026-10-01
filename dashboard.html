@@ -190,7 +190,6 @@
     padding:7px 10px;font-size:11px;line-height:1.5;opacity:0;transition:opacity .12s;white-space:nowrap;z-index:5;}
   .ctip .t-d{color:var(--text-dim);font-size:9px;letter-spacing:1px;text-transform:uppercase;}
   .ctip .t-v{font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;}
-  .chart-foot{font-size:10px;color:var(--text-dim);margin-top:9px;line-height:1.55;}
   @media(max-width:640px){.chart-wrap,#histCanvas{height:215px;} #sumSpark{height:56px;}}
 </style>
 </head>
@@ -232,7 +231,6 @@
     </div>
   </div>
   <div class="chart-wrap"><canvas id="histCanvas"></canvas><div class="ctip" id="ctip"></div></div>
-  <div class="chart-foot" id="chart-foot">Loading history...</div>
 </div>
 
 <div class="goals">
@@ -1088,15 +1086,6 @@ setInterval(refresh,30000);
     HIST={dates:dates,values:vals};
     clearInterval(drawT); animateChart(); spark();
     requestAnimationFrame(function(){spark();drawChart(1);});
-    var first=vals.find(function(x){return x>0;})||1, last=vals[n-1];
-    var el=document.getElementById('chart-foot');
-    if(el) el.innerHTML='Your <b>current</b> holdings priced back through history, so this answers '+
-      '&ldquo;what would this exact basket have been worth&rdquo;, not what you actually held at the time. '+
-      '<b>'+(last/first).toFixed(1)+'x</b> since Jan 2018. Covers '+
-      (liveTot?Math.round(covTot/liveTot*100):0)+'% of today&rsquo;s value across '+used+' positions'+
-      (missed.length?' (no price history for '+missed.join(', ')+')':'')+'. '+
-      'The line steps up as assets list, SOL in 2021 and SUI in 2023, because they did not exist before then. '+
-      'Crypto closes from Coinbase, equities from Yahoo, Metaplanet at the daily yen rate.';
     if(window.__lastTotal) paintDeltas(window.__lastTotal);
   };
 
@@ -1110,10 +1099,7 @@ setInterval(refresh,30000);
   fetch('history.json?v='+Date.now()).then(function(r){return r.json();}).then(function(j){
     HRAW=j; wireHover();
     if(window.__lastPositions) rebuildHistory(window.__lastPositions);
-  }).catch(function(){
-    var el=document.getElementById('chart-foot');
-    if(el) el.textContent='History unavailable (history.json did not load).';
-  });
+  }).catch(function(){});
 })();
 </script>
 </body>
