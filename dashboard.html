@@ -180,7 +180,28 @@
     text-align:center;position:relative;z-index:3;}
 
   .chart-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-  .rng{display:flex;gap:4px;}
+  .rng{display:flex;gap:4px;margin-bottom:10px;}
+  .view-tabs{display:flex;gap:4px;}
+  .view-tabs button{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);font-size:11px;font-weight:700;
+    padding:6px 12px;border-radius:8px;cursor:pointer;transition:all .2s;}
+  .view-tabs button.active{color:var(--accent);border-color:rgba(107,140,199,.45);background:rgba(107,140,199,.12);}
+  .pie-view{display:flex;align-items:center;gap:22px;min-height:290px;}
+  .pie-view[hidden]{display:none;}
+  .pie-box{position:relative;width:240px;height:240px;flex:0 0 240px;}
+  #pieSvg{width:100%;height:100%;display:block;}
+  #pieSvg path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:opacity .15s,transform .15s;}
+  #pieSvg.focus path{opacity:.3;} #pieSvg.focus path.on{opacity:1;transform:scale(1.04);}
+  .pie-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;text-align:center;}
+  .pie-center .pc-n{font-size:12px;font-weight:700;color:var(--text);text-shadow:0 1px 3px rgba(0,0,0,.8);}
+  .pie-center .pc-v{font-size:18px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9);font-variant-numeric:tabular-nums;}
+  .pie-legend{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;min-width:0;}
+  .pie-legend .pl{display:flex;align-items:center;gap:7px;font-size:12px;padding:4px 6px;border-radius:6px;cursor:pointer;min-width:0;}
+  .pie-legend .pl.on{background:var(--surface2);}
+  .pie-legend .sw{width:10px;height:10px;border-radius:3px;flex:0 0 10px;}
+  .pie-legend .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pie-legend .pc{margin-left:auto;color:var(--text-dim);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  @media(max-width:640px){.chart-head{flex-wrap:nowrap;} .chart-head .card-title{font-size:13px;gap:6px;white-space:nowrap;} .view-tabs button{padding:5px 8px;font-size:10px;white-space:nowrap;}}
+  @media(max-width:640px){.pie-view{flex-direction:column;gap:14px;}.pie-box{width:220px;height:220px;flex-basis:220px;}.pie-legend{width:100%;}}
   .rng button{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);font-size:10px;font-weight:800;
     letter-spacing:.5px;padding:5px 11px;border-radius:7px;cursor:pointer;transition:all .2s;}
   .rng button.active{color:var(--green);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08);}
@@ -224,13 +245,23 @@
 
 <div class="card">
   <div class="chart-head">
-    <div class="card-title"><span class="live-dot"></span>Portfolio Value Over Time</div>
+    <div class="card-title"><span class="live-dot"></span><span id="chartTitle">Portfolio Value Over Time</span></div>
+    <div class="view-tabs" id="viewTabs">
+      <button data-v="line" class="active">Line chart</button><button data-v="pie">Pie chart</button>
+    </div>
+  </div>
+  <div id="lineView">
     <div class="rng" id="rng">
       <button data-r="90">3M</button><button data-r="365">1Y</button>
       <button data-r="1095">3Y</button><button data-r="0" class="active">ALL</button>
     </div>
+    <div class="chart-wrap"><canvas id="histCanvas"></canvas><div class="ctip" id="ctip"></div></div>
   </div>
-  <div class="chart-wrap"><canvas id="histCanvas"></canvas><div class="ctip" id="ctip"></div></div>
+  <div id="pieView" class="pie-view" hidden>
+    <div class="pie-box"><svg id="pieSvg" viewBox="-110 -110 220 220"></svg>
+      <div class="pie-center" id="pieCenter"></div></div>
+    <div class="pie-legend" id="pieLegend"></div>
+  </div>
 </div>
 
 <div class="goals">
@@ -649,6 +680,7 @@ function renderPortfolio(){
   document.getElementById('total-value').textContent=fmt$(grandTotal);
   window.__lastPositions=_hp; window.__lastTotal=grandTotal;
   if(window.rebuildHistory)rebuildHistory(_hp);
+  if(window.renderPie)renderPie(_hp);
   document.getElementById('total-equiv').textContent=fmtBtc(grandTotal/btcPrice)+' BTC';
   var _se=document.getElementById('sum-equiv');if(_se)_se.textContent=fmtBtc(grandTotal/btcPrice);
   paintTotal(grandTotal);
@@ -1100,6 +1132,62 @@ setInterval(refresh,30000);
     HRAW=j; wireHover();
     if(window.__lastPositions) rebuildHistory(window.__lastPositions);
   }).catch(function(){});
+})();
+// Line / Pie toggle on the value card. Pie = share of today's value per position; slices under 1.5% fold into "Other".
+(function(){
+  var COLORS=['#e8b84f','#6b8cc7','#4ade80','#d89553','#5ca4c2','#e06478','#a78bfa','#a7e8de','#f472b6','#facc15','#60a5fa','#fb923c','#34d399','#c084fc'];
+  var SL=[], TOT=0, SEL=-1;
+  function arc(a0,a1,r){
+    if(a1-a0>=Math.PI*2-1e-6) return 'M0,-'+r+'A'+r+','+r+' 0 1,1 0,'+r+'A'+r+','+r+' 0 1,1 0,-'+r+'Z';
+    var x0=r*Math.sin(a0),y0=-r*Math.cos(a0),x1=r*Math.sin(a1),y1=-r*Math.cos(a1);
+    return 'M0,0L'+x0.toFixed(2)+','+y0.toFixed(2)+'A'+r+','+r+' 0 '+(a1-a0>Math.PI?1:0)+',1 '+x1.toFixed(2)+','+y1.toFixed(2)+'Z';
+  }
+  function center(){
+    var c=document.getElementById('pieCenter'), svg=document.getElementById('pieSvg'); if(!c) return;
+    svg.classList.toggle('focus',SEL>=0);
+    svg.querySelectorAll('path').forEach(function(p,i){p.classList.toggle('on',i===SEL);});
+    document.querySelectorAll('#pieLegend .pl').forEach(function(p,i){p.classList.toggle('on',i===SEL);});
+    var s=SEL>=0?SL[SEL]:null;
+    c.innerHTML=s?'<div class="pc-n">'+s.name+' &middot; '+(s.v/TOT*100).toFixed(1)+'%</div><div class="pc-v">'+fmt$exact(s.v)+'</div>':'';
+  }
+  function pick(i){ SEL=(SEL===i?-1:i); center(); }
+  window.renderPie=function(pos){
+    if(!pos) return;
+    var m={}; pos.forEach(function(p){ if(p.value>0) m[p.name]=(m[p.name]||0)+p.value; });
+    var all=Object.keys(m).map(function(k){return {name:k,v:m[k]};}).sort(function(a,b){return b.v-a.v;});
+    TOT=all.reduce(function(t,x){return t+x.v;},0); if(!TOT) return;
+    SL=[]; var other=0, on=0;
+    all.forEach(function(x){ if(x.v/TOT>=0.015 && SL.length<COLORS.length) SL.push(x); else {other+=x.v; on++;} });
+    if(other>0) SL.push({name:'Other ('+on+')',v:other,other:true});
+    var a=0, svg='', leg='';
+    SL.forEach(function(x,i){
+      var col=x.other?'#3a3f52':COLORS[i%COLORS.length], a1=a+x.v/TOT*Math.PI*2;
+      svg+='<path d="'+arc(a,a1,100)+'" fill="'+col+'" data-i="'+i+'"></path>'; a=a1;
+      leg+='<div class="pl" data-i="'+i+'"><span class="sw" style="background:'+col+'"></span><span class="nm">'+x.name+
+           '</span><span class="pc">'+(x.v/TOT*100).toFixed(1)+'%</span></div>';
+    });
+    document.getElementById('pieSvg').innerHTML=svg;
+    document.getElementById('pieLegend').innerHTML=leg;
+    if(SEL>=SL.length) SEL=-1; center();
+  };
+  document.addEventListener('click',function(e){
+    var t=e.target.closest&&e.target.closest('#pieSvg path, #pieLegend .pl');
+    if(t){ pick(+t.dataset.i); return; }
+    var b=e.target.closest&&e.target.closest('#viewTabs button'); if(!b) return;
+    setView(b.dataset.v);
+  });
+  function setView(v){
+    document.querySelectorAll('#viewTabs button').forEach(function(x){x.classList.toggle('active',x.dataset.v===v);});
+    document.getElementById('lineView').hidden=(v!=='line');
+    document.getElementById('pieView').hidden=(v!=='pie');
+    document.getElementById('chartTitle').textContent=v==='pie'?'Portfolio Allocation':'Portfolio Value Over Time';
+    try{localStorage.setItem('chartView',v);}catch(_){}
+    if(v==='line') window.dispatchEvent(new Event('resize'));
+    else if(window.__lastPositions) renderPie(window.__lastPositions);
+  }
+  var saved='line'; try{saved=localStorage.getItem('chartView')||'line';}catch(_){}
+  if(saved==='pie') setView('pie');
+  if(window.__lastPositions) renderPie(window.__lastPositions);
 })();
 </script>
 </body>
