@@ -62,14 +62,15 @@
   .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
   .status-pill{font-size:9px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;background:rgba(0,255,136,0.15);color:var(--green);}
-  .goals{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
-  .goal-box{flex:1;min-width:200px;border:1px solid;border-radius:12px;padding:14px 18px;}
-  .goal-box.btc{background:rgba(232,184,79,0.05);border-color:rgba(232,184,79,0.18);}
-  .goal-box.sol{background:rgba(107,140,199,0.05);border-color:rgba(107,140,199,0.18);}
-  .goal-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px;}
-  .goal-val{font-size:28px;font-weight:900;}
-  .goal-sub{font-size:11px;color:var(--text-dim);margin-top:4px;}
-  .goal-track{margin-top:8px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+  /* One shared box for both goals, split down the middle (Austin 10/3) */
+  .goals{display:flex;margin-bottom:16px;border:1px solid var(--border);border-radius:12px;overflow:hidden;
+    background:linear-gradient(90deg,rgba(232,184,79,0.05),rgba(107,140,199,0.05));}
+  .goal-box{flex:1;min-width:0;padding:9px 16px;}
+  .goal-box+.goal-box{border-left:1px solid var(--border);}
+  .goal-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:2px;}
+  .goal-val{font-size:20px;font-weight:900;line-height:1.15;}
+  .goal-sub{font-size:11px;color:var(--text-dim);margin-top:2px;}
+  .goal-track{margin-top:6px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
   .goal-fill{height:100%;border-radius:3px;transition:width 0.5s;}
   .tab-bar{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border);align-items:center;flex-wrap:wrap;}
   .tab-btn{background:none;border:none;padding:8px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-dim);}
@@ -134,8 +135,9 @@
     .hud{flex-direction:column;gap:10px;text-align:center;padding:12px 16px;}
     .hud-right{justify-content:center;flex-wrap:wrap;gap:14px;}
     .hud-stat .val{font-size:16px;}
-    .goal-box{min-width:100%;}
-    .goal-val{font-size:22px;}
+    .goal-box{padding:8px 10px;}
+    .goal-val{font-size:17px;}
+    .goal-sub{font-size:10px;}
     .card{padding:12px;}
     .tab-bar{gap:0;}
     .tab-btn{padding:6px 8px;font-size:9px;letter-spacing:0.5px;}
@@ -146,7 +148,6 @@
     th.col-btc,td.col-btc{display:none;}
     .total-bar{flex-direction:column;gap:6px;text-align:center;padding:12px 16px;}
     .total-bar .vals{display:flex;gap:12px;justify-content:center;}
-    .goals{gap:8px;}
 
     .ie-strip{flex-wrap:wrap;gap:6px;padding:6px 8px;}
     .ie-strip input{width:100px;}
@@ -1135,7 +1136,9 @@ setInterval(refresh,30000);
 })();
 // Line / Pie toggle on the value card. Pie = share of today's value per position; slices under 1.5% fold into "Other".
 (function(){
-  var COLORS=['#e8b84f','#6b8cc7','#4ade80','#d89553','#5ca4c2','#e06478','#a78bfa','#a7e8de','#f472b6','#facc15','#60a5fa','#fb923c','#34d399','#c084fc'];
+  // Fixed colours per Austin 10/3: ETH blue, MSTR (Strategy) dark orange, SOL green; BTC keeps gold. Everything else rotates through the rest.
+  var FIXED={BTC:'#e8b84f',ETH:'#3b82f6',MSTR:'#c2410c',SOL:'#22c55e'};
+  var COLORS=['#e06478','#a78bfa','#facc15','#a7e8de','#f472b6','#5ca4c2','#c084fc','#94a3b8','#fda4af','#7dd3fc','#d9f99d','#fcd34d','#e879f9','#67e8f9'];
   var SL=[], TOT=0, SEL=-1;
   function arc(a0,a1,r){
     if(a1-a0>=Math.PI*2-1e-6) return 'M0,-'+r+'A'+r+','+r+' 0 1,1 0,'+r+'A'+r+','+r+' 0 1,1 0,-'+r+'Z';
@@ -1160,8 +1163,9 @@ setInterval(refresh,30000);
     all.forEach(function(x){ if(x.v/TOT>=0.015 && SL.length<COLORS.length) SL.push(x); else {other+=x.v; on++;} });
     if(other>0) SL.push({name:'Other ('+on+')',v:other,other:true});
     var a=0, svg='', leg='';
+    var ci=0;
     SL.forEach(function(x,i){
-      var col=x.other?'#3a3f52':COLORS[i%COLORS.length], a1=a+x.v/TOT*Math.PI*2;
+      var col=x.other?'#3a3f52':(FIXED[x.name]||COLORS[ci++%COLORS.length]), a1=a+x.v/TOT*Math.PI*2;
       svg+='<path d="'+arc(a,a1,100)+'" fill="'+col+'" data-i="'+i+'"></path>'; a=a1;
       leg+='<div class="pl" data-i="'+i+'"><span class="sw" style="background:'+col+'"></span><span class="nm">'+x.name+
            '</span><span class="pc">'+(x.v/TOT*100).toFixed(1)+'%</span></div>';
