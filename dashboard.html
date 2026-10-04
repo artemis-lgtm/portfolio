@@ -357,7 +357,7 @@
    HOLDINGS — hardcoded baseline
    ══════════════════════════════════════════════════════════════ */
 const CRYPTO=[
-  {id:'bitcoin',sym:'BTC',qty:13.46,color:'var(--light-teal)',top:true},
+  {id:'bitcoin',sym:'BTC',qty:13.48756,color:'var(--light-teal)',top:true},
   {id:'ethereum',sym:'ETH',qty:41.83,color:'var(--light-teal)',top:true},
   {id:'solana',sym:'SOL',qty:1132,color:'var(--light-teal)',top:true},
   {id:'sui',sym:'SUI',qty:21532,color:'var(--light-teal)',top:true},
@@ -808,9 +808,18 @@ function inlineDelete(type,mpId){
   syncToGist(); // push to cloud
 }
 
+// Source-side quantity changes: a saved phone override for the same row would mask
+// the new baseline, so drop that row's override once per revision.
+const BASELINE_REV='2026-10-04-btc';
+const BASELINE_CHANGED=['crypto_bitcoin'];
 // On load: apply any saved qty overrides to hardcoded arrays
 (function applyOverrides(){
   const overrides=JSON.parse(localStorage.getItem('portfolio-qty-override')||'{}');
+  if(localStorage.getItem('portfolio-baseline-rev')!==BASELINE_REV){
+    BASELINE_CHANGED.forEach(k=>delete overrides[k]);
+    localStorage.setItem('portfolio-qty-override',JSON.stringify(overrides));
+    localStorage.setItem('portfolio-baseline-rev',BASELINE_REV);
+  }
   Object.entries(overrides).forEach(([k,v])=>{
     const[type,...rest]=k.split('_');
     const src=rest.join('_');
