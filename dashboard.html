@@ -213,26 +213,25 @@
   .ctip .t-d{color:var(--text-dim);font-size:9px;letter-spacing:1px;text-transform:uppercase;}
   .ctip .t-v{font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;}
   @media(max-width:640px){.chart-wrap,#histCanvas{height:215px;} #sumSpark{height:56px;}}
-  /* Portfolio pager (2026-10-04): swipe right for Higney International */
-  .pager{display:flex;align-items:flex-start;gap:40px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
-  .pager::-webkit-scrollbar{display:none;}
-  .page{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;}
+  /* Portfolio switcher (2026-10-04): swipe sideways between Liquid Portfolio and Higney International */
+  #pfWrap{transition:transform .22s ease,opacity .22s ease;}
+  #pfWrap.out-l{transform:translateX(-40px);opacity:0;} #pfWrap.out-r{transform:translateX(40px);opacity:0;}
+  #pfWrap.in-l{transform:translateX(40px);opacity:0;transition:none;} #pfWrap.in-r{transform:translateX(-40px);opacity:0;transition:none;}
   .pager-dots{display:flex;justify-content:center;gap:8px;margin:-8px 0 14px;}
   .pager-dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--border);cursor:pointer;transition:background .2s,transform .2s;}
   .pager-dots button.on{background:var(--yellow);transform:scale(1.15);}
-  .hi-avatar{background:#8a6d2f;}
+  .hud-avatar.hi{background:#8a6d2f;}
 </style>
 </head>
 <body>
 
 <div class="pager-dots" id="pagerDots"><button class="on" aria-label="Liquid Portfolio"></button><button aria-label="Higney International"></button></div>
-<div class="pager" id="pager">
-<section class="page" id="page-personal">
+<div id="pfWrap">
 <div class="hud summary">
   <div class="hud-left">
-    <div class="hud-avatar">A</div>
+    <div class="hud-avatar" id="pfAvatar">A</div>
     <div class="hud-info">
-      <h1>Liquid <span>Portfolio</span></h1>
+      <h1 id="pfName">Liquid <span>Portfolio</span></h1>
       <div class="subtitle"><span class="online-pulse"></span> Live Tracking</div>
     </div>
   </div>
@@ -276,7 +275,7 @@
   </div>
 </div>
 
-<div class="goals">
+<div class="goals" id="goals">
   <div class="goal-box btc">
     <div class="goal-label" style="color:var(--yellow);">Lifelong Goal</div>
     <div class="goal-val" style="color:var(--yellow);">100 BTC</div>
@@ -321,37 +320,6 @@
   </div>
 </div>
 
-</section>
-
-<section class="page" id="page-hi">
-<div class="hud summary">
-  <div class="hud-left">
-    <div class="hud-avatar hi-avatar">H</div>
-    <div class="hud-info">
-      <h1>Higney <span>International</span></h1>
-      <div class="subtitle"><span class="online-pulse"></span> Live Tracking</div>
-    </div>
-  </div>
-  <div class="total-wrap">
-    <div class="total-val" id="hi-total">--</div>
-  </div>
-  <div class="sum-meta">
-    <span><b id="hi-equiv" style="color:var(--yellow);">--</b> BTC equivalent</span>
-    <span><b id="hi-count">--</b> positions</span>
-  </div>
-</div>
-<div class="card">
-  <div class="card-header"><div class="card-title">Holdings</div><span class="status-pill">Live</span></div>
-  <table><thead><tr><th style="text-align:left;">Asset</th><th>Amount</th><th>Price</th><th>Value</th><th class="col-btc">BTC Equiv</th></tr></thead><tbody id="hi-tbody"></tbody></table>
-  <div class="total-bar">
-    <div class="lbl">TOTAL PORTFOLIO</div>
-    <div class="vals">
-      <span style="color:var(--green);" id="hi-total-value">--</span>
-      <span style="margin-left:12px;color:var(--yellow);" id="hi-total-equiv">--</span>
-    </div>
-  </div>
-</div>
-</section>
 </div>
 
 
@@ -399,7 +367,7 @@
 /* ══════════════════════════════════════════════════════════════
    HOLDINGS — hardcoded baseline
    ══════════════════════════════════════════════════════════════ */
-const CRYPTO=[
+const P_CRYPTO=[
   {id:'bitcoin',sym:'BTC',qty:13.48756,color:'var(--light-teal)',top:true},
   {id:'ethereum',sym:'ETH',qty:41.83,color:'var(--light-teal)',top:true},
   {id:'solana',sym:'SOL',qty:1132,color:'var(--light-teal)',top:true},
@@ -481,7 +449,7 @@ const HI_CRYPTO=[
   {id:'usd-coin',sym:'USDC',qty:0}
 ];
 
-const EQUITIES=[
+const P_EQUITIES=[
   {sym:'TSLA',name:'Tesla',shares:177,proxyKey:'TSLA',color:'var(--light-teal)'},
   {sym:'MSTR',name:'Strategy',shares:180,proxyKey:'MSTR',color:'var(--light-teal)'},
   {sym:'GME',name:'GameStop',shares:270,proxyKey:'GME',color:'var(--light-teal)'},
@@ -490,9 +458,19 @@ const EQUITIES=[
   {sym:'BMNR',name:'BitMine Immersion',shares:200,proxyKey:'BMNR',color:'var(--light-teal)'},
 ];
 
-const COLLECTIBLES=[
+const P_COLLECTIBLES=[
   {name:'Bored Ape Yacht Club',sym:'BAYC',qty:1,proxyKey:'bored-ape-yacht-club',color:'var(--light-teal)'}
 ];
+
+// Portfolios you swipe between. prefix namespaces each one's localStorage
+// (manual positions + qty overrides) so edits never leak across.
+const PORTFOLIOS={
+  personal:{key:'personal',name:'Liquid <span>Portfolio</span>',avatar:'A',crypto:P_CRYPTO,equities:P_EQUITIES,collectibles:P_COLLECTIBLES,prefix:'',goals:true},
+  hi:{key:'hi',name:'Higney <span>International</span>',avatar:'H',crypto:HI_CRYPTO,equities:[],collectibles:[],prefix:'hi:',goals:false}
+};
+const PF_ORDER=['personal','hi'];
+let PF=PORTFOLIOS.personal,CRYPTO=PF.crypto,EQUITIES=PF.equities,COLLECTIBLES=PF.collectibles;
+function activatePF(pf){PF=pf;CRYPTO=pf.crypto;EQUITIES=pf.equities;COLLECTIBLES=pf.collectibles;}
 
 /* ══════════════════════════════════════════════════════════════
    STATE
@@ -505,8 +483,8 @@ let stockSource='none';
 
 /* ── Manual positions (localStorage) ── */
 const MP_KEY='portfolio-manual-positions';
-function loadMP(){try{return JSON.parse(localStorage.getItem(MP_KEY)||'{"crypto":[],"equities":[],"collectibles":[]}');}catch(e){return{crypto:[],equities:[],collectibles:[]};}}
-function saveMP(mp){localStorage.setItem(MP_KEY,JSON.stringify(mp));}
+function loadMP(pf){pf=pf||PF;try{return JSON.parse(localStorage.getItem(pf.prefix+MP_KEY)||'{"crypto":[],"equities":[],"collectibles":[]}');}catch(e){return{crypto:[],equities:[],collectibles:[]};}}
+function saveMP(mp,pf){localStorage.setItem((pf||PF).prefix+MP_KEY,JSON.stringify(mp));}
 
 /* ── Formatting ── */
 function fmt$(n){if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1000)return'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});if(n>=1)return'$'+n.toFixed(2);return'$'+n.toFixed(4);}
@@ -579,9 +557,7 @@ function buildSubRow(label,value,btcEquiv,color){
 
 // CoinGecko — free, CORS-friendly, handles crypto + NFT floors
 async function fetchCrypto(){
-  const mp=loadMP();
-  const manualIds=mp.crypto.filter(c=>c.id).map(c=>c.id);
-  const allIds=[...new Set([...CRYPTO.map(c=>c.id),...HI_CRYPTO.map(c=>c.id),...manualIds])];
+  const allIds=[...new Set(Object.values(PORTFOLIOS).flatMap(pf=>[...pf.crypto.map(c=>c.id),...loadMP(pf).crypto.filter(c=>c.id).map(c=>c.id)]))];
   // 2026-09-29: CoinGecko's keyless /simple/price now answers 403 "Request blocked"
   // (CloudFront) from browsers and servers alike, which blanked the crypto tab.
   // DefiLlama takes the same CoinGecko ids, needs no key, and sends CORS *, so it is
@@ -737,7 +713,9 @@ function renderPortfolio(){
   var _se=document.getElementById('sum-equiv');if(_se)_se.textContent=fmtBtc(grandTotal/btcPrice);
   paintTotal(grandTotal);
 
-  // GOALS
+  // GOALS (personal only)
+  document.getElementById('goals').style.display=PF.goals?'':'none';
+  if(PF.goals){
   const totalBtcEquiv=grandTotal/btcPrice;
   const btcPct=Math.min(Math.round((totalBtcEquiv/100)*100),100);
   document.getElementById('btc-goal-text').textContent=`Currently: ${totalBtcEquiv.toFixed(4)} BTC equiv -- ${btcPct}% complete`;
@@ -746,6 +724,7 @@ function renderPortfolio(){
   const solPct=Math.min(Math.round((totalSol/2000)*100),100);
   document.getElementById('sol-goal-text').textContent=`${totalSol.toLocaleString('en-US',{maximumFractionDigits:4})} SOL -- ${solPct}% complete`;
   document.getElementById('sol-goal-bar').style.width=solPct+'%';
+  }
 
 
 
@@ -831,7 +810,7 @@ function inlineSave(type,src,isManual,rowId){
     }
   }else{
     // Hardcoded position: save an override in localStorage
-    const key='portfolio-qty-override';
+    const key=PF.prefix+'portfolio-qty-override';
     const overrides=JSON.parse(localStorage.getItem(key)||'{}');
     overrides[type+'_'+src]=newQty;
     localStorage.setItem(key,JSON.stringify(overrides));
@@ -864,21 +843,23 @@ function inlineDelete(type,mpId){
 const BASELINE_REV='2026-10-04-btc';
 const BASELINE_CHANGED=['crypto_bitcoin'];
 // On load: apply any saved qty overrides to hardcoded arrays
-(function applyOverrides(){
-  const overrides=JSON.parse(localStorage.getItem('portfolio-qty-override')||'{}');
-  if(localStorage.getItem('portfolio-baseline-rev')!==BASELINE_REV){
+function applyOverrides(pf){
+  const OK=pf.prefix+'portfolio-qty-override';
+  const overrides=JSON.parse(localStorage.getItem(OK)||'{}');
+  if(pf===PORTFOLIOS.personal&&localStorage.getItem('portfolio-baseline-rev')!==BASELINE_REV){
     BASELINE_CHANGED.forEach(k=>delete overrides[k]);
-    localStorage.setItem('portfolio-qty-override',JSON.stringify(overrides));
+    localStorage.setItem(OK,JSON.stringify(overrides));
     localStorage.setItem('portfolio-baseline-rev',BASELINE_REV);
   }
   Object.entries(overrides).forEach(([k,v])=>{
     const[type,...rest]=k.split('_');
     const src=rest.join('_');
-    if(type==='crypto'){const c=CRYPTO.find(c=>c.id===src);if(c)c.qty=v;}
-    else if(type==='equities'){const e=EQUITIES.find(e=>e.sym===src);if(e)e.shares=v;}
-    else if(type==='collectibles'){const c=COLLECTIBLES.find(c=>c.sym===src);if(c)c.qty=v;}
+    if(type==='crypto'){const c=pf.crypto.find(c=>c.id===src);if(c)c.qty=v;}
+    else if(type==='equities'){const e=pf.equities.find(e=>e.sym===src);if(e)e.shares=v;}
+    else if(type==='collectibles'){const c=pf.collectibles.find(c=>c.sym===src);if(c)c.qty=v;}
   });
-})();
+}
+Object.values(PORTFOLIOS).forEach(applyOverrides);
 
 /* ══════════════════════════════════════════════════════════════
    GIST SYNC — positions cloud-sync so Artemis can see edits
@@ -903,10 +884,11 @@ function setupSyncToken(){
 }
 
 function _buildPositionSnapshot(){
-  const crypto=CRYPTO.map(c=>({id:c.id,sym:c.sym,qty:c.qty}));
-  const equities=EQUITIES.map(e=>({sym:e.sym,name:e.name,shares:e.shares}));
-  const collectibles=COLLECTIBLES.map(c=>({sym:c.sym,name:c.name,qty:c.qty}));
-  const manual=loadMP();
+  // The gist mirrors the personal portfolio only.
+  const crypto=P_CRYPTO.map(c=>({id:c.id,sym:c.sym,qty:c.qty}));
+  const equities=P_EQUITIES.map(e=>({sym:e.sym,name:e.name,shares:e.shares}));
+  const collectibles=P_COLLECTIBLES.map(c=>({sym:c.sym,name:c.name,qty:c.qty}));
+  const manual=loadMP(PORTFOLIOS.personal);
   return{crypto,equities,collectibles,manual,lastUpdated:new Date().toISOString()};
 }
 
@@ -950,26 +932,26 @@ async function syncFromGist(){
     const overrides={};
     if(snapshot.crypto){
       snapshot.crypto.forEach(c=>{
-        const hc=CRYPTO.find(x=>x.id===c.id);
+        const hc=P_CRYPTO.find(x=>x.id===c.id);
         if(hc&&hc.qty!==c.qty){hc.qty=c.qty;overrides['crypto_'+c.id]=c.qty;}
       });
     }
     if(snapshot.equities){
       snapshot.equities.forEach(e=>{
-        const he=EQUITIES.find(x=>x.sym===e.sym);
+        const he=P_EQUITIES.find(x=>x.sym===e.sym);
         if(he&&he.shares!==e.shares){he.shares=e.shares;overrides['equities_'+e.sym]=e.shares;}
       });
     }
     if(snapshot.collectibles){
       snapshot.collectibles.forEach(c=>{
-        const hc=COLLECTIBLES.find(x=>x.sym===c.sym);
+        const hc=P_COLLECTIBLES.find(x=>x.sym===c.sym);
         if(hc&&hc.qty!==c.qty){hc.qty=c.qty;overrides['collectibles_'+c.sym]=c.qty;}
       });
     }
     const existing=JSON.parse(localStorage.getItem('portfolio-qty-override')||'{}');
     Object.assign(existing,overrides);
     localStorage.setItem('portfolio-qty-override',JSON.stringify(existing));
-    if(snapshot.manual){saveMP(snapshot.manual);}
+    if(snapshot.manual){saveMP(snapshot.manual,PORTFOLIOS.personal);}
     console.log('[gist-sync] loaded positions from gist (updated:',snapshot.lastUpdated,')');
   }catch(e){console.warn('[gist-sync] pull failed:',e);}
 }
@@ -1019,33 +1001,41 @@ function savePosition(){
 
 
 /* ── INIT ── */
-function renderHI(){
-  const btcPrice=prices['bitcoin']||67000;
-  let total=0,html='';
-  HI_CRYPTO.map(c=>({c,p:prices[c.id]||0,val:c.qty*(prices[c.id]||0)})).sort((x,y)=>y.val-x.val).forEach(({c,p,val})=>{
-    total+=val;
-    html+=`<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
-    <td style="padding:6px 6px;font-weight:600;white-space:nowrap;"><span style="color:var(--light-teal);">${c.sym}</span></td>
-    <td style="text-align:right;padding:6px 6px;font-weight:700;white-space:nowrap;">${fmtQty(c.qty)}</td>
-    <td style="text-align:right;padding:6px 6px;color:var(--text-dim);white-space:nowrap;">${fmt$(p)}</td>
-    <td style="text-align:right;padding:6px 6px;font-weight:700;color:var(--light-teal);white-space:nowrap;">${fmt$(val)}</td>
-    <td class="col-btc" style="text-align:right;padding:6px 6px;white-space:nowrap;">${fmtBtc(val/btcPrice)}</td></tr>`;
-  });
-  html+=buildSubRow('CRYPTO TOTAL',total,total/btcPrice,'var(--yellow)');
-  document.getElementById('hi-tbody').innerHTML=html;
-  document.getElementById('hi-total').textContent=fmt$(total);
-  document.getElementById('hi-total-value').textContent=fmt$(total);
-  document.getElementById('hi-equiv').textContent=fmtBtc(total/btcPrice);
-  document.getElementById('hi-total-equiv').textContent=fmtBtc(total/btcPrice)+' BTC';
-  document.getElementById('hi-count').textContent=HI_CRYPTO.length;
+/* ── Portfolio switching: swipe sideways or tap the dots ── */
+function showPF(key,dir){
+  const pf=PORTFOLIOS[key];if(!pf||pf===PF)return;
+  const w=document.getElementById('pfWrap');
+  const swap=()=>{
+    document.querySelector('tr.inline-edit')?.remove();
+    activatePF(pf);
+    try{localStorage.setItem('portfolio-active',key);}catch(_){}
+    document.getElementById('pfName').innerHTML=pf.name;
+    const av=document.getElementById('pfAvatar');av.textContent=pf.avatar;av.classList.toggle('hi',key==='hi');
+    document.title=pf.name.replace(/<[^>]+>/g,'');
+    document.querySelectorAll('#pagerDots button').forEach((d,i)=>d.classList.toggle('on',PF_ORDER[i]===key));
+    showTab('crypto');
+    renderPortfolio();
+  };
+  if(!dir){swap();return;}
+  w.classList.add(dir>0?'out-l':'out-r');
+  setTimeout(()=>{swap();w.classList.remove('out-l','out-r');w.classList.add(dir>0?'in-l':'in-r');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.remove('in-l','in-r')));},220);
 }
 (function(){
-  const pager=document.getElementById('pager'),dots=[...document.querySelectorAll('#pagerDots button')];
-  const page=()=>Math.round(pager.scrollLeft/(pager.scrollWidth/dots.length));
-  pager.addEventListener('scroll',()=>{const i=page();dots.forEach((d,j)=>d.classList.toggle('on',i===j));},{passive:true});
-  dots.forEach((d,i)=>d.onclick=()=>pager.scrollTo({left:pager.children[i].offsetLeft-pager.offsetLeft,behavior:'smooth'}));
+  document.querySelectorAll('#pagerDots button').forEach((d,i)=>d.onclick=()=>{const cur=PF_ORDER.indexOf(PF.key);showPF(PF_ORDER[i],Math.sign(i-cur));});
+  let x0=null,y0=0;
+  const skip=t=>t&&t.closest&&t.closest('canvas,svg,input,select,textarea,.mp-overlay,.ie-strip');
+  document.addEventListener('touchstart',e=>{if(e.touches.length!==1||skip(e.target)){x0=null;return;}x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(x0===null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    const i=PF_ORDER.indexOf(PF.key)+(dx<0?1:-1);
+    if(i>=0&&i<PF_ORDER.length)showPF(PF_ORDER[i],dx<0?1:-1);
+  },{passive:true});
+  let saved='personal';try{saved=localStorage.getItem('portfolio-active')||'personal';}catch(_){}
+  if(saved!=='personal')showPF(saved,0);
 })();
-async function refresh(){await fetchAllPrices();renderPortfolio();renderHI();}
+async function refresh(){await fetchAllPrices();renderPortfolio();}
 refresh();
 setInterval(refresh,30000);
 </script>
