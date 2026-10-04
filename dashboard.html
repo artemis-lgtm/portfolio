@@ -276,13 +276,19 @@
 </div>
 
 <div class="goals" id="goals">
-  <div class="goal-box btc">
+  <div class="goal-box usd pf-hi" style="display:none;">
+    <div class="goal-label" style="color:var(--green);">Company Goal</div>
+    <div class="goal-val" style="color:var(--green);">$10,000,000</div>
+    <div class="goal-sub" id="usd-goal-text">Loading...</div>
+    <div class="goal-track"><div class="goal-fill" id="usd-goal-bar" style="width:0%;background:var(--green);"></div></div>
+  </div>
+  <div class="goal-box btc pf-personal">
     <div class="goal-label" style="color:var(--yellow);">Lifelong Goal</div>
     <div class="goal-val" style="color:var(--yellow);">100 BTC</div>
     <div class="goal-sub" id="btc-goal-text">Loading...</div>
     <div class="goal-track"><div class="goal-fill" id="btc-goal-bar" style="width:0%;background:var(--yellow);"></div></div>
   </div>
-  <div class="goal-box sol">
+  <div class="goal-box sol pf-personal">
     <div class="goal-label" style="color:var(--accent);">Short-Term Goal</div>
     <div class="goal-val" style="color:var(--accent);">2,000 SOL</div>
     <div class="goal-sub" id="sol-goal-text">Loading...</div>
@@ -465,8 +471,8 @@ const P_COLLECTIBLES=[
 // Portfolios you swipe between. prefix namespaces each one's localStorage
 // (manual positions + qty overrides) so edits never leak across.
 const PORTFOLIOS={
-  personal:{key:'personal',name:'Liquid <span>Portfolio</span>',avatar:'A',crypto:P_CRYPTO,equities:P_EQUITIES,collectibles:P_COLLECTIBLES,prefix:'',goals:true},
-  hi:{key:'hi',name:'Higney <span>International</span>',avatar:'H',crypto:HI_CRYPTO,equities:[],collectibles:[],prefix:'hi:',goals:false}
+  personal:{key:'personal',name:'Liquid <span>Portfolio</span>',avatar:'A',crypto:P_CRYPTO,equities:P_EQUITIES,collectibles:P_COLLECTIBLES,prefix:'',goals:'personal'},
+  hi:{key:'hi',name:'Higney <span>International</span>',avatar:'H',crypto:HI_CRYPTO,equities:[],collectibles:[],prefix:'hi:',goals:'usd',goalUsd:10e6}
 };
 const PF_ORDER=['personal','hi'];
 let PF=PORTFOLIOS.personal,CRYPTO=PF.crypto,EQUITIES=PF.equities,COLLECTIBLES=PF.collectibles;
@@ -714,8 +720,14 @@ function renderPortfolio(){
   paintTotal(grandTotal);
 
   // GOALS (personal only)
-  document.getElementById('goals').style.display=PF.goals?'':'none';
-  if(PF.goals){
+  document.querySelectorAll('#goals .pf-personal').forEach(el=>el.style.display=PF.goals==='personal'?'':'none');
+  document.querySelectorAll('#goals .pf-hi').forEach(el=>el.style.display=PF.goals==='usd'?'':'none');
+  if(PF.goals==='usd'){
+    const pct=grandTotal/PF.goalUsd*100;
+    document.getElementById('usd-goal-text').textContent=`Currently: ${fmt$exact(grandTotal)} -- ${pct<10?pct.toFixed(2):Math.round(pct)}% complete`;
+    document.getElementById('usd-goal-bar').style.width=Math.min(Math.max(pct,0.8),100)+'%';
+  }
+  if(PF.goals==='personal'){
   const totalBtcEquiv=grandTotal/btcPrice;
   const btcPct=Math.min(Math.round((totalBtcEquiv/100)*100),100);
   document.getElementById('btc-goal-text').textContent=`Currently: ${totalBtcEquiv.toFixed(4)} BTC equiv -- ${btcPct}% complete`;
