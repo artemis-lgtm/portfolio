@@ -213,10 +213,21 @@
   .ctip .t-d{color:var(--text-dim);font-size:9px;letter-spacing:1px;text-transform:uppercase;}
   .ctip .t-v{font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;}
   @media(max-width:640px){.chart-wrap,#histCanvas{height:215px;} #sumSpark{height:56px;}}
+  /* Portfolio pager (2026-10-04): swipe right for Higney International */
+  .pager{display:flex;align-items:flex-start;gap:40px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
+  .pager::-webkit-scrollbar{display:none;}
+  .page{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;}
+  .pager-dots{display:flex;justify-content:center;gap:8px;margin:-8px 0 14px;}
+  .pager-dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--border);cursor:pointer;transition:background .2s,transform .2s;}
+  .pager-dots button.on{background:var(--yellow);transform:scale(1.15);}
+  .hi-avatar{background:#8a6d2f;}
 </style>
 </head>
 <body>
 
+<div class="pager-dots" id="pagerDots"><button class="on" aria-label="Liquid Portfolio"></button><button aria-label="Higney International"></button></div>
+<div class="pager" id="pager">
+<section class="page" id="page-personal">
 <div class="hud summary">
   <div class="hud-left">
     <div class="hud-avatar">A</div>
@@ -310,6 +321,38 @@
   </div>
 </div>
 
+</section>
+
+<section class="page" id="page-hi">
+<div class="hud summary">
+  <div class="hud-left">
+    <div class="hud-avatar hi-avatar">H</div>
+    <div class="hud-info">
+      <h1>Higney <span>International</span></h1>
+      <div class="subtitle"><span class="online-pulse"></span> Live Tracking</div>
+    </div>
+  </div>
+  <div class="total-wrap">
+    <div class="total-val" id="hi-total">--</div>
+  </div>
+  <div class="sum-meta">
+    <span><b id="hi-equiv" style="color:var(--yellow);">--</b> BTC equivalent</span>
+    <span><b id="hi-count">--</b> positions</span>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><div class="card-title">Holdings</div><span class="status-pill">Live</span></div>
+  <table><thead><tr><th style="text-align:left;">Asset</th><th>Amount</th><th>Price</th><th>Value</th><th class="col-btc">BTC Equiv</th></tr></thead><tbody id="hi-tbody"></tbody></table>
+  <div class="total-bar">
+    <div class="lbl">TOTAL PORTFOLIO</div>
+    <div class="vals">
+      <span style="color:var(--green);" id="hi-total-value">--</span>
+      <span style="margin-left:12px;color:var(--yellow);" id="hi-total-equiv">--</span>
+    </div>
+  </div>
+</div>
+</section>
+</div>
 
 
 <div class="mp-overlay" id="mp-overlay" onclick="if(event.target===this)closeModal()">
@@ -412,6 +455,32 @@ const CRYPTO=[
   {id:'altura',sym:'ALU',qty:16949,color:'var(--light-teal)'},
 ];
 
+// Higney International company portfolio (2026-10-04, from Austin's app screenshots).
+// Its own page, swipe right from Liquid Portfolio; never added into the personal totals.
+const HI_CRYPTO=[
+  {id:'bitcoin',sym:'BTC',qty:0.3378},
+  {id:'solana',sym:'SOL',qty:62.07},
+  {id:'sui',sym:'SUI',qty:2691.60},
+  {id:'chainlink',sym:'LINK',qty:223.54},
+  {id:'ethereum',sym:'ETH',qty:1.17},
+  {id:'avalanche-2',sym:'AVAX',qty:255.44},
+  {id:'sei-network',sym:'SEI',qty:22723.39},
+  {id:'helium',sym:'HNT',qty:1354.70},
+  {id:'ripple',sym:'XRP',qty:440.40},
+  {id:'superfarm',sym:'SUPER',qty:2478.10},
+  {id:'spx6900',sym:'SPX',qty:1311},
+  {id:'dogecoin',sym:'DOGE',qty:5598},
+  {id:'hivemapper',sym:'HONEY',qty:180027.64},
+  {id:'decentraland',sym:'MANA',qty:4475.70},
+  {id:'aptos',sym:'APT',qty:227.82},
+  {id:'the-sandbox',sym:'SAND',qty:1503},
+  {id:'gigachad-2',sym:'GIGA',qty:14577},
+  {id:'skale',sym:'SKL',qty:5479},
+  {id:'echelon-prime',sym:'PRIME',qty:34.60},
+  {id:'vulcan-forged',sym:'PYR',qty:102.40},
+  {id:'usd-coin',sym:'USDC',qty:0}
+];
+
 const EQUITIES=[
   {sym:'TSLA',name:'Tesla',shares:177,proxyKey:'TSLA',color:'var(--light-teal)'},
   {sym:'MSTR',name:'Strategy',shares:180,proxyKey:'MSTR',color:'var(--light-teal)'},
@@ -512,7 +581,7 @@ function buildSubRow(label,value,btcEquiv,color){
 async function fetchCrypto(){
   const mp=loadMP();
   const manualIds=mp.crypto.filter(c=>c.id).map(c=>c.id);
-  const allIds=[...new Set([...CRYPTO.map(c=>c.id),...manualIds])];
+  const allIds=[...new Set([...CRYPTO.map(c=>c.id),...HI_CRYPTO.map(c=>c.id),...manualIds])];
   // 2026-09-29: CoinGecko's keyless /simple/price now answers 403 "Request blocked"
   // (CloudFront) from browsers and servers alike, which blanked the crypto tab.
   // DefiLlama takes the same CoinGecko ids, needs no key, and sends CORS *, so it is
@@ -950,7 +1019,33 @@ function savePosition(){
 
 
 /* ── INIT ── */
-async function refresh(){await fetchAllPrices();renderPortfolio();}
+function renderHI(){
+  const btcPrice=prices['bitcoin']||67000;
+  let total=0,html='';
+  HI_CRYPTO.map(c=>({c,p:prices[c.id]||0,val:c.qty*(prices[c.id]||0)})).sort((x,y)=>y.val-x.val).forEach(({c,p,val})=>{
+    total+=val;
+    html+=`<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+    <td style="padding:6px 6px;font-weight:600;white-space:nowrap;"><span style="color:var(--light-teal);">${c.sym}</span></td>
+    <td style="text-align:right;padding:6px 6px;font-weight:700;white-space:nowrap;">${fmtQty(c.qty)}</td>
+    <td style="text-align:right;padding:6px 6px;color:var(--text-dim);white-space:nowrap;">${fmt$(p)}</td>
+    <td style="text-align:right;padding:6px 6px;font-weight:700;color:var(--light-teal);white-space:nowrap;">${fmt$(val)}</td>
+    <td class="col-btc" style="text-align:right;padding:6px 6px;white-space:nowrap;">${fmtBtc(val/btcPrice)}</td></tr>`;
+  });
+  html+=buildSubRow('CRYPTO TOTAL',total,total/btcPrice,'var(--yellow)');
+  document.getElementById('hi-tbody').innerHTML=html;
+  document.getElementById('hi-total').textContent=fmt$(total);
+  document.getElementById('hi-total-value').textContent=fmt$(total);
+  document.getElementById('hi-equiv').textContent=fmtBtc(total/btcPrice);
+  document.getElementById('hi-total-equiv').textContent=fmtBtc(total/btcPrice)+' BTC';
+  document.getElementById('hi-count').textContent=HI_CRYPTO.length;
+}
+(function(){
+  const pager=document.getElementById('pager'),dots=[...document.querySelectorAll('#pagerDots button')];
+  const page=()=>Math.round(pager.scrollLeft/(pager.scrollWidth/dots.length));
+  pager.addEventListener('scroll',()=>{const i=page();dots.forEach((d,j)=>d.classList.toggle('on',i===j));},{passive:true});
+  dots.forEach((d,i)=>d.onclick=()=>pager.scrollTo({left:pager.children[i].offsetLeft-pager.offsetLeft,behavior:'smooth'}));
+})();
+async function refresh(){await fetchAllPrices();renderPortfolio();renderHI();}
 refresh();
 setInterval(refresh,30000);
 </script>
