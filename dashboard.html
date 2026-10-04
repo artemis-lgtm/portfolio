@@ -483,7 +483,7 @@ function showTab(tab){
 }
 
 /* ── Row builders ── */
-function fmtQty(qty){return typeof qty==='number'?(qty>=1000?qty.toLocaleString('en-US',{maximumFractionDigits:0}):qty.toLocaleString('en-US',{maximumFractionDigits:qty%1?6:0})):qty;}
+function fmtQty(qty){return typeof qty==='number'?qty.toLocaleString('en-US',{maximumFractionDigits:qty>=1000?4:8}):qty;}
 
 // rowId: unique identifier for inline edit targeting. type: 'crypto'|'equities'|'collectibles'. srcKey: hardcoded index or _mpId for manual.
 function buildRow(label,color,qty,price,value,btcEquiv,rowId,type,srcKey,isManual){
@@ -689,11 +689,11 @@ function renderPortfolio(){
   // GOALS
   const totalBtcEquiv=grandTotal/btcPrice;
   const btcPct=Math.min(Math.round((totalBtcEquiv/100)*100),100);
-  document.getElementById('btc-goal-text').textContent=`Currently: ${totalBtcEquiv.toFixed(2)} BTC equiv -- ${btcPct}% complete`;
+  document.getElementById('btc-goal-text').textContent=`Currently: ${totalBtcEquiv.toFixed(4)} BTC equiv -- ${btcPct}% complete`;
   document.getElementById('btc-goal-bar').style.width=btcPct+'%';
   const totalSol=allCrypto.filter(c=>c.sym==='SOL').reduce((a,c)=>a+c.qty,0);
   const solPct=Math.min(Math.round((totalSol/2000)*100),100);
-  document.getElementById('sol-goal-text').textContent=`${totalSol.toFixed(2)} SOL -- ${solPct}% complete`;
+  document.getElementById('sol-goal-text').textContent=`${totalSol.toLocaleString('en-US',{maximumFractionDigits:4})} SOL -- ${solPct}% complete`;
   document.getElementById('sol-goal-bar').style.width=solPct+'%';
 
 
