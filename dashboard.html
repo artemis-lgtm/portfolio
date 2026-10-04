@@ -601,33 +601,12 @@ function renderPortfolio(){
   let html='';
   let cryptoTotal=0;
   const allCrypto=[...CRYPTO,...mp.crypto.map(c=>({...c,_manual:true}))];
-  const topCrypto=allCrypto.filter(c=>c.top&&prices[c.id]);
-  const builtinOther=CRYPTO.filter(c=>!c.top);
-  const manualOther=mp.crypto.filter(c=>!c.top);
-
-  topCrypto.forEach((c,i)=>{
-    const p=prices[c.id]||0,val=c.qty*p;
+  // Every coin, largest position first
+  allCrypto.map(c=>({c,p:prices[c.id]||0,val:c.qty*(prices[c.id]||0)})).sort((x,y)=>y.val-x.val).forEach(({c,p,val})=>{
     cryptoTotal+=val;totalPositions++;
     _hp.push({name:c.sym,qty:c.qty,value:val});
-    const rid='ct_'+(c._mpId||c.id);
-    html+=buildRow(c.sym,c.color,c.qty,p,val,val/btcPrice,rid,'crypto',c._manual?c._mpId:c.id,!!c._manual);
-  });
-
-  // Individual rows for every altcoin (no collapsed "Other" row)
-  builtinOther.forEach(c=>{
-    const p=prices[c.id]||0,val=c.qty*p;
-    cryptoTotal+=val;totalPositions++;
-    _hp.push({name:c.sym,qty:c.qty,value:val});
-    const rid='co_'+c.id;
-    html+=buildRow(c.sym,c.color,c.qty,p,val,val/btcPrice,rid,'crypto',c.id,false);
-  });
-
-  manualOther.forEach(c=>{
-    const p=prices[c.id]||0,val=c.qty*p;
-    cryptoTotal+=val;totalPositions++;
-    _hp.push({name:c.sym,qty:c.qty,value:val});
-    const rid='cm_'+c._mpId;
-    html+=buildRow(c.sym,c.color||'var(--text)',c.qty,p,val,val/btcPrice,rid,'crypto',c._mpId,true);
+    const rid=c._manual?'cm_'+c._mpId:'ct_'+c.id;
+    html+=buildRow(c.sym,c.color||'var(--text)',c.qty,p,val,val/btcPrice,rid,'crypto',c._manual?c._mpId:c.id,!!c._manual);
   });
 
   html+=buildSubRow('CRYPTO TOTAL',cryptoTotal,cryptoTotal/btcPrice,'var(--yellow)');
@@ -644,12 +623,13 @@ function renderPortfolio(){
   else if(stockSource==='manual')noteEl.textContent='Using cached prices (live fetch unavailable)';
   else noteEl.textContent='Loading stock prices...';
 
-  allEq.forEach(e=>{
+  allEq.map(e=>{
     let p=0;
     const sp=stockPrices[e.proxyKey]||stockPrices[e.proxyKey?.replace('_','.')]||null;
     if(sp){p=e.isJpy?(sp.price_usd||sp.price/150):sp.price;}
     else if(e._manual&&e.manualPrice){p=e.manualPrice;}
-    const val=e.shares*p;
+    return{e,p,val:e.shares*p};
+  }).sort((x,y)=>y.val-x.val).forEach(({e,p,val})=>{
     eqTotal+=val;totalPositions++;
     _hp.push({name:e.sym,qty:e.shares,value:val});
     const rid='eq_'+(e._mpId||e.sym);
@@ -663,10 +643,12 @@ function renderPortfolio(){
   let colHtml='';
   let colTotal=0;
   const allCol=[...COLLECTIBLES,...mp.collectibles.map(c=>({...c,_manual:true}))];
-  allCol.forEach(c=>{
+  allCol.map(c=>{
     let val=0,floorStr='--';
     if(c.proxyKey==='bored-ape-yacht-club'&&nftFloorUsd){val=c.qty*nftFloorUsd;floorStr=nftFloorEth.toFixed(2)+' ETH';}
     else if(c.manualPrice){val=c.qty*c.manualPrice;floorStr=fmt$(c.manualPrice);}
+    return{c,val,floorStr};
+  }).sort((x,y)=>y.val-x.val).forEach(({c,val,floorStr})=>{
     colTotal+=val;totalPositions++;
     _hp.push({name:c.sym,qty:c.qty,value:val});
     const rid='cl_'+(c._mpId||c.sym);
