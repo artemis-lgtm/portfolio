@@ -472,7 +472,7 @@ const P_COLLECTIBLES=[
 // (manual positions + qty overrides) so edits never leak across.
 const PORTFOLIOS={
   personal:{key:'personal',name:'Liquid <span>Portfolio</span>',avatar:'A',crypto:P_CRYPTO,equities:P_EQUITIES,collectibles:P_COLLECTIBLES,prefix:'',goals:'personal'},
-  hi:{key:'hi',name:'Higney <span>International</span>',avatar:'H',crypto:HI_CRYPTO,equities:[],collectibles:[],prefix:'hi:',goals:'usd',goalUsd:10e6}
+  hi:{key:'hi',name:'Higney <span>International</span>',avatar:'H',crypto:HI_CRYPTO,equities:[],collectibles:[],prefix:'hi:',goals:'usd',goalUsd:10e6,since:'2024-07-01'}
 };
 const PF_ORDER=['personal','hi'];
 let PF=PORTFOLIOS.personal,CRYPTO=PF.crypto,EQUITIES=PF.equities,COLLECTIBLES=PF.collectibles;
@@ -1138,11 +1138,16 @@ setInterval(refresh,30000);
       c.fillText(money(val),PAD.l-8,y);
     }
     c.textBaseline='top';
-    var ticks=Math.min(6,v.length);
+    // Date labels: as many as fit without touching (phone width gets ~3-4), "Jun '21" style.
+    var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var lab=function(d){return MON[+d.slice(5,7)-1]+" '"+d.slice(2,4);};
+    var tw=c.measureText("Mmm '00").width;
+    var ticks=Math.max(2,Math.min(6,v.length,Math.floor(W/(tw*1.6+16))+1));
+    c.textAlign='center';
     for(var t=0;t<ticks;t++){
       var idx=Math.round(t/(ticks-1)*(v.length-1));
-      c.textAlign=t===0?'left':(t===ticks-1?'right':'center');
-      c.fillText(S.d[idx].slice(0,7),X(idx),g.h-PAD.b+6);
+      var lx=Math.min(Math.max(X(idx),PAD.l+tw/2),g.w-tw/2-2);
+      c.fillText(lab(S.d[idx]),lx,g.h-PAD.b+6);
     }
     var upto=Math.max(2,Math.floor(v.length*prog));
     c.beginPath();
@@ -1205,6 +1210,8 @@ setInterval(refresh,30000);
     var d0=new Date(HRAW.start+'T00:00:00Z'), dates=new Array(n);
     for(var i=0;i<n;i++) dates[i]=new Date(d0.getTime()+i*86400000).toISOString().slice(0,10);
     HIST={dates:dates,values:vals};
+    // A portfolio with a start date (Higney International: July 2024) charts from there.
+    if(typeof PF!=='undefined'&&PF.since){var k0=dates.findIndex(function(d){return d>=PF.since;});if(k0>0)HIST={dates:dates.slice(k0),values:vals.slice(k0)};}
     clearInterval(drawT); animateChart(); spark();
     requestAnimationFrame(function(){spark();drawChart(1);});
     if(window.__lastTotal) paintDeltas(window.__lastTotal);
