@@ -456,7 +456,7 @@ const HI_CRYPTO=[
 ];
 
 const P_EQUITIES=[
-  {sym:'TSLA',name:'Tesla',shares:177,proxyKey:'TSLA',color:'var(--light-teal)'},
+  {sym:'TSLA',name:'Tesla',shares:180,proxyKey:'TSLA',color:'var(--light-teal)'},
   {sym:'MSTR',name:'Strategy',shares:180,proxyKey:'MSTR',color:'var(--light-teal)'},
   {sym:'GME',name:'GameStop',shares:270,proxyKey:'GME',color:'var(--light-teal)'},
   {sym:'GME+',name:'GME+',shares:30,proxyKey:'GME',color:'var(--light-teal)'},
@@ -852,8 +852,8 @@ function inlineDelete(type,mpId){
 
 // Source-side quantity changes: a saved phone override for the same row would mask
 // the new baseline, so drop that row's override once per revision.
-const BASELINE_REV='2026-10-04-btc';
-const BASELINE_CHANGED=['crypto_bitcoin'];
+const BASELINE_REV='2026-10-05-tsla';
+const BASELINE_CHANGED=['equities_TSLA'];
 // On load: apply any saved qty overrides to hardcoded arrays
 function applyOverrides(pf){
   const OK=pf.prefix+'portfolio-qty-override';
