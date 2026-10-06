@@ -221,6 +221,65 @@
   .pager-dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--border);cursor:pointer;transition:background .2s,transform .2s;}
   .pager-dots button.on{background:var(--yellow);transform:scale(1.15);}
   .hud-avatar.hi{background:#8a6d2f;}
+  /* Amount invested (Higney International, 2026-10-06): tap the figure to edit it */
+  .inv-row{position:relative;z-index:3;display:flex;margin:14px 4px 0;border:1px solid var(--border);border-radius:12px;overflow:hidden;
+    background:rgba(255,255,255,.02);}
+  .inv-row[hidden]{display:none;}
+  .inv-box{flex:1;min-width:0;padding:8px 12px;text-align:center;}
+  .inv-box+.inv-box{border-left:1px solid var(--border);}
+  .inv-l{display:block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px;}
+  .inv-v{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .inv-p{font-size:11px;font-weight:700;margin-left:4px;}
+  #invFig{cursor:pointer;background:none;border:0;color:inherit;font:inherit;}
+  #invFig .inv-v{border-bottom:1px dashed rgba(107,140,199,.5);}
+  .inv-row.editing .inv-box+.inv-box{display:none;}
+  .inv-edit{display:flex;gap:6px;justify-content:center;align-items:center;}
+  .inv-edit input{width:110px;padding:5px 8px;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;color:var(--text);font-size:14px;font-weight:700;text-align:right;outline:none;}
+  .inv-edit button{padding:6px 9px;border:0;border-radius:6px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;}
+  /* quantity cell on a coin row: tap it to edit; the rest of the row opens the coin page */
+  td.qty-cell span{border-bottom:1px dashed rgba(107,140,199,.35);padding-bottom:1px;}
+  /* ---- Coin page (2026-10-06) ---- */
+  #coinView[hidden]{display:none;}
+  .cv-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .cv-back{background:var(--surface);border:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;
+    padding:8px 14px 8px 10px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .cv-back svg{width:14px;height:14px;}
+  .cv-pf{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);}
+  .cv-hero{padding:18px 18px 20px;margin-bottom:16px;border-radius:16px;position:relative;overflow:hidden;
+    background:linear-gradient(170deg,var(--surface2) 0%,var(--surface) 62%);border:1px solid rgba(107,140,199,0.28);
+    box-shadow:0 0 0 1px rgba(107,140,199,0.06),0 18px 44px -28px rgba(107,140,199,0.55);}
+  .cv-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+  .cv-id{display:flex;align-items:center;gap:12px;}
+  .cv-logo{width:40px;height:40px;border-radius:50%;background:var(--surface2);flex:0 0 40px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;color:var(--accent);overflow:hidden;}
+  .cv-logo img{width:100%;height:100%;object-fit:cover;}
+  .cv-name{font-size:20px;font-weight:700;letter-spacing:-.4px;line-height:1.15;}
+  .cv-sym{font-size:12px;color:var(--text-dim);font-weight:600;margin-top:2px;display:flex;gap:8px;align-items:center;}
+  .cv-rank{font-size:9px;font-weight:800;letter-spacing:.8px;padding:2px 7px;border-radius:20px;border:1px solid var(--border);color:var(--text-dim);}
+  .cv-price{font-size:40px;font-weight:300;letter-spacing:-.02em;margin-top:16px;font-variant-numeric:tabular-nums;line-height:1.05;word-break:break-all;}
+  .cv-chg{font-size:13px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums;}
+  .cv-chg span{color:var(--text-dim);font-weight:600;margin-left:4px;}
+  .cv-note{font-size:11px;color:var(--yellow);margin-top:10px;line-height:1.4;}
+  .cv-rng-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}
+  .cv-rng-row .rng{margin-bottom:0;}
+  #cvRngChg{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .cv-chart{position:relative;height:240px;}
+  #cvCanvas{width:100%;height:240px;display:block;touch-action:pan-y;cursor:crosshair;}
+  .cv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-dim);pointer-events:none;}
+  .cv-hold{display:flex;gap:8px;}
+  .cv-hold .pstat{text-align:left;}
+  .cv-hold .pstat .n{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cv-stats{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;}
+  .cv-stat{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);min-width:0;}
+  .cv-stat .k{font-size:12px;color:var(--text-dim);white-space:nowrap;}
+  .cv-stat .v{font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;min-width:0;}
+  .cv-stat .v small{display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-top:2px;}
+  .cv-stat .v.na{color:var(--text-dim);font-weight:600;}
+  .cv-supbar{height:4px;background:var(--surface2);border-radius:2px;margin-top:5px;overflow:hidden;}
+  .cv-supbar i{display:block;height:100%;background:var(--accent);border-radius:2px;}
+  .cv-src{font-size:10px;color:var(--text-dim);text-align:center;margin:-10px 0 24px;}
+  @media(max-width:600px){.cv-stats{grid-template-columns:1fr;} .cv-price{font-size:34px;} .cv-chart,#cvCanvas{height:210px;}
+    .cv-rng-row .rng button{padding:5px 9px;}}
 </style>
 </head>
 <body>
@@ -243,6 +302,10 @@
     <span>24h <b id="sum-d1">--</b></span>
     <span>30d <b id="sum-d30">--</b></span>
     <span>1y <b id="sum-d365">--</b></span>
+  </div>
+  <div class="inv-row" id="invRow" hidden>
+    <div class="inv-box" id="invBox"><button id="invFig" onclick="editInvested()" title="Tap to change"><span class="inv-l">Amount invested</span><span class="inv-v" id="invVal">--</span></button></div>
+    <div class="inv-box"><span class="inv-l">Gain / loss</span><span class="inv-v" id="invGain">--</span></div>
   </div>
   <div class="chips" id="chips">
     <span class="chip" data-c="feed">Feed</span><span class="chip" data-c="price">Price</span>
@@ -326,6 +389,44 @@
   </div>
 </div>
 
+</div>
+
+<div id="coinView" hidden>
+  <div class="cv-top">
+    <button class="cv-back" id="cvBack" onclick="closeCoin()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>Back</button>
+    <span class="cv-pf" id="cvPf"></span>
+  </div>
+  <div class="cv-hero">
+    <div class="cv-id">
+      <div class="cv-logo" id="cvLogo"></div>
+      <div><div class="cv-name" id="cvName">--</div><div class="cv-sym"><span id="cvSym"></span><span class="cv-rank" id="cvRank" hidden></span></div></div>
+    </div>
+    <div class="cv-price" id="cvPrice">--</div>
+    <div class="cv-chg" id="cvChg">--</div>
+    <div class="cv-note" id="cvNote" hidden></div>
+  </div>
+  <div class="card">
+    <div class="cv-rng-row">
+      <div class="rng" id="cvRng">
+        <button data-k="1d" class="active">24H</button><button data-k="7d">7D</button><button data-k="30d">30D</button><button data-k="1y">1Y</button>
+      </div>
+      <span id="cvRngChg"></span>
+    </div>
+    <div class="cv-chart"><canvas id="cvCanvas"></canvas><div class="ctip" id="cvTip"></div><div class="cv-msg" id="cvMsg">Loading chart...</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header" style="margin-bottom:10px;"><div class="card-title">Your holding</div></div>
+    <div class="cv-hold">
+      <div class="pstat"><div class="l">Quantity</div><div class="n" id="cvQty">--</div></div>
+      <div class="pstat"><div class="l">Value</div><div class="n" id="cvVal" style="color:var(--green);">--</div></div>
+      <div class="pstat"><div class="l">Of portfolio</div><div class="n" id="cvShare">--</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header" style="margin-bottom:4px;"><div class="card-title">Market stats</div></div>
+    <div class="cv-stats" id="cvStats"></div>
+  </div>
+  <div class="cv-src" id="cvSrc"></div>
 </div>
 
 
@@ -472,7 +573,7 @@ const P_COLLECTIBLES=[
 // (manual positions + qty overrides) so edits never leak across.
 const PORTFOLIOS={
   personal:{key:'personal',name:'Liquid <span>Portfolio</span>',avatar:'A',crypto:P_CRYPTO,equities:P_EQUITIES,collectibles:P_COLLECTIBLES,prefix:'',goals:'personal'},
-  hi:{key:'hi',name:'Higney <span>International</span>',avatar:'H',crypto:HI_CRYPTO,equities:[],collectibles:[],prefix:'hi:',goals:'usd',goalUsd:10e6,since:'2024-07-01'}
+  hi:{key:'hi',name:'Higney <span>International</span>',avatar:'H',crypto:HI_CRYPTO,equities:[],collectibles:[],prefix:'hi:',goals:'usd',goalUsd:10e6,since:'2024-07-01',invested:90000}
 };
 const PF_ORDER=['personal','hi'];
 let PF=PORTFOLIOS.personal,CRYPTO=PF.crypto,EQUITIES=PF.equities,COLLECTIBLES=PF.collectibles;
@@ -539,15 +640,23 @@ function showTab(tab){
 function fmtQty(qty){return typeof qty==='number'?qty.toLocaleString('en-US',{maximumFractionDigits:qty>=1000?4:8}):qty;}
 
 // rowId: unique identifier for inline edit targeting. type: 'crypto'|'equities'|'collectibles'. srcKey: hardcoded index or _mpId for manual.
-function buildRow(label,color,qty,price,value,btcEquiv,rowId,type,srcKey,isManual){
+// cg: CoinGecko id on a coin row. A coin row opens its coin page on tap, except the
+// quantity cell, which still opens the inline quantity editor exactly as before.
+function buildRow(label,color,qty,price,value,btcEquiv,rowId,type,srcKey,isManual,cg){
   const badge=isManual?' <span class="mp-badge">MANUAL</span>':'';
-  return`<tr class="clickable-row" data-row-id="${rowId}" data-type="${type}" data-src="${srcKey}" data-manual="${isManual?1:0}" onclick="toggleInlineEdit(this)" style="border-bottom:1px solid rgba(255,255,255,0.03);">
+  const coin=type==='crypto';
+  return`<tr class="clickable-row" data-row-id="${rowId}" data-type="${type}" data-src="${srcKey}" data-manual="${isManual?1:0}"${coin?` data-cg="${cg||''}" data-sym="${label}"`:''} onclick="rowTap(event,this)" style="border-bottom:1px solid rgba(255,255,255,0.03);">
     <td style="padding:6px 6px;font-weight:600;white-space:nowrap;"><span style="color:${color};">${label}${badge}</span></td>
-    <td style="text-align:right;padding:6px 6px;font-weight:700;white-space:nowrap;">${fmtQty(qty)}</td>
+    <td class="qty-cell" style="text-align:right;padding:6px 6px;font-weight:700;white-space:nowrap;">${coin?'<span>'+fmtQty(qty)+'</span>':fmtQty(qty)}</td>
     <td style="text-align:right;padding:6px 6px;color:var(--text-dim);white-space:nowrap;">${fmt$(price)}</td>
     <td style="text-align:right;padding:6px 6px;font-weight:700;color:${color};white-space:nowrap;">${fmt$(value)}</td>
     <td class="col-btc" style="text-align:right;padding:6px 6px;white-space:nowrap;">${fmtBtc(btcEquiv)}</td>
   </tr>`;
+}
+function rowTap(e,tr){
+  if(tr.dataset.type!=='crypto'||(e.target.closest&&e.target.closest('td.qty-cell'))){toggleInlineEdit(tr);return;}
+  document.querySelector('tr.inline-edit')?.remove();
+  openCoin(tr.dataset.cg,tr.dataset.sym);
 }
 function buildSubRow(label,value,btcEquiv,color){
   return`<tr style="border-top:2px solid var(--border);background:rgba(255,255,255,0.02);">
@@ -657,7 +766,7 @@ function renderPortfolio(){
     cryptoTotal+=val;totalPositions++;
     _hp.push({name:c.sym,qty:c.qty,value:val});
     const rid=c._manual?'cm_'+c._mpId:'ct_'+c.id;
-    html+=buildRow(c.sym,c.color||'var(--text)',c.qty,p,val,val/btcPrice,rid,'crypto',c._manual?c._mpId:c.id,!!c._manual);
+    html+=buildRow(c.sym,c.color||'var(--text)',c.qty,p,val,val/btcPrice,rid,'crypto',c._manual?c._mpId:c.id,!!c._manual,c.id);
   });
 
   html+=buildSubRow('CRYPTO TOTAL',cryptoTotal,cryptoTotal/btcPrice,'var(--yellow)');
@@ -718,6 +827,9 @@ function renderPortfolio(){
   document.getElementById('total-equiv').textContent=fmtBtc(grandTotal/btcPrice)+' BTC';
   var _se=document.getElementById('sum-equiv');if(_se)_se.textContent=fmtBtc(grandTotal/btcPrice);
   paintTotal(grandTotal);
+
+  paintInvested(grandTotal);
+  if(window.__cv&&window.__cv.open)paintCoinHolding();
 
   // GOALS (personal only)
   document.querySelectorAll('#goals .pf-personal').forEach(el=>el.style.display=PF.goals==='personal'?'':'none');
@@ -1012,6 +1124,345 @@ function savePosition(){
 (function(){const mp=loadMP();let c=false;['crypto','equities','collectibles'].forEach(t=>{mp[t].forEach(item=>{if(!item._mpId){item._mpId='mp_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);c=true;}});});if(c)saveMP(mp);})();
 
 
+/* ══════════════════════════════════════════════════════════════
+   AMOUNT INVESTED (Higney International, 2026-10-06)
+   Baked default lives on the portfolio (PORTFOLIOS.hi.invested); a tap-edit
+   saves to localStorage under the portfolio's prefix, like qty overrides.
+   ══════════════════════════════════════════════════════════════ */
+const INV_KEY='portfolio-invested';
+function getInvested(pf){
+  pf=pf||PF;if(pf.invested==null)return null;
+  try{const raw=localStorage.getItem(pf.prefix+INV_KEY);if(raw!==null){const v=parseFloat(raw);if(isFinite(v)&&v>=0)return v;}}catch(_){}
+  return pf.invested;
+}
+function _invBoxHtml(){return '<button id="invFig" onclick="editInvested()" title="Tap to change"><span class="inv-l">Amount invested</span><span class="inv-v" id="invVal">--</span></button>';}
+function paintInvested(total){
+  const row=document.getElementById('invRow');if(!row)return;
+  const inv=getInvested();
+  if(inv==null){row.hidden=true;return;}
+  row.hidden=false;
+  const v=document.getElementById('invVal');if(v)v.textContent=fmt$exact(inv);
+  const g=document.getElementById('invGain');
+  if(total==null||!isFinite(total)){g.textContent='--';g.style.color='';return;}
+  const diff=total-inv,pct=inv>0?diff/inv*100:null,up=diff>=0;
+  g.innerHTML=(up?'+':'-')+fmt$exact(Math.abs(diff))+(pct==null?'':'<span class="inv-p">'+(up?'+':'')+pct.toFixed(1)+'%</span>');
+  g.style.color=up?'var(--green)':'var(--red)';
+}
+function editInvested(){
+  const box=document.getElementById('invBox'),row=document.getElementById('invRow');
+  if(!box||document.getElementById('invInput'))return;
+  row.classList.add('editing');
+  box.innerHTML='<span class="inv-l">Amount invested</span><div class="inv-edit">'+
+    '<input id="invInput" type="text" inputmode="decimal" value="'+getInvested()+'" onkeydown="if(event.key===\'Enter\')saveInvested();if(event.key===\'Escape\')closeInvestedEdit();">'+
+    '<button class="ie-save" onclick="saveInvested()">Save</button><button class="ie-cancel" onclick="closeInvestedEdit()">Cancel</button></div>';
+  const inp=document.getElementById('invInput');inp.focus();inp.select();
+}
+function closeInvestedEdit(){
+  const box=document.getElementById('invBox');if(!box)return;
+  document.getElementById('invRow').classList.remove('editing');
+  box.innerHTML=_invBoxHtml();paintInvested(window.__lastTotal);
+}
+function saveInvested(){
+  const inp=document.getElementById('invInput');if(!inp)return;
+  const v=parseFloat(String(inp.value).replace(/[$,\s]/g,''));
+  if(!isFinite(v)||v<0){inp.style.borderColor='var(--red)';return;}
+  try{localStorage.setItem(PF.prefix+INV_KEY,String(v));}catch(_){}
+  closeInvestedEdit();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COIN PAGE (2026-10-06): tap a coin row (anywhere but the quantity)
+   Market stats: CoinGecko /coins/markets (answers from browsers again as of 10/6),
+   falling back to CoinPaprika /tickers (no ATL there) and finally DefiLlama's 24h %.
+   Chart: DefiLlama /chart (same source as the row prices), CoinGecko market_chart fallback.
+   ══════════════════════════════════════════════════════════════ */
+// CoinGecko id (after LLAMA_ALIAS) -> CoinPaprika id. Every coin in both portfolios,
+// matched on symbol + live price agreement 2026-10-06. Paprika reports 0 market cap
+// for a few (DOT, STONK); 0 is shown as n/a, never as $0.
+const PAPRIKA={'bitcoin':'btc-bitcoin','ethereum':'eth-ethereum','ripple':'xrp-xrp','usd-coin':'usdc-usd-coin','solana':'sol-solana',
+  'dogecoin':'doge-dogecoin','chainlink':'link-chainlink','cardano':'ada-cardano','uniswap':'uni-uniswap','avalanche-2':'avax-avalanche',
+  'sui':'sui-sui','worldcoin-wld':'wld-worldcoin','polkadot':'dot-polkadot','jupiter-exchange-solana':'jup-jupiter-exchange-token',
+  'polygon-ecosystem-token':'pol-polygon-ecosystem-token','lighter':'lit-lighter','filecoin':'fil-filecoin','cosmos':'atom-cosmos',
+  'injective-protocol':'inj-injective-protocol','aptos':'apt-aptos','fetch-ai':'fetch-ai','sei-network':'sei-sei','spx6900':'spx-spx6900',
+  'syrup':'syrup-syrup-token','dogwifcoin':'wif-dogwifcoin','akash-network':'akt-akash-network','decentraland':'mana-decentraland',
+  'the-sandbox':'sand-the-sandbox','swissborg':'chsb-swissborg','fartcoin':'fartcoin-fartcoin','stonk-3':'stonk-stonk-3',
+  'immutable-x':'imx-immutable-x','superfarm':'super-superfarm','basic-attention-token':'bat-basic-attention-token','beam-2':'beam-beam-eth',
+  'gala':'gala-gala','helium':'hnt-helium','kusama':'ksm-kusama','nosana':'nos-nosana','enjincoin':'enj-enjin-coin','deep':'deep-deepbook-protocol',
+  'popcat':'popcat-popcat','api3':'api3-api3','coti':'coti-coti','power-ledger':'powr-power-ledger','energy-web-token':'ewt-energy-web-token',
+  'kyber-network-crystal':'knc-kyber-network','skale':'skl-skale','moonriver':'movr-moonriver','gigachad-2':'giga-gigachad',
+  'echelon-prime':'prime-echelon-prime','hivemapper':'honey-hivemapper','ponke':'ponke-ponke','lofi-2':'lofi-lofi1','lukso-token-2':'lyx-lukso',
+  'altura':'alu-altura','trustswap':'swap-trustswap','vulcan-forged':'pyr-vulcan-forged'};
+// Coins whose market data is read under a successor token (see LLAMA_ALIAS).
+const CV_NOTE={
+  'maple':'MPL migrated to SYRUP at 1 MPL = 100 SYRUP. Price and chart are per MPL; market stats are SYRUP\'s.',
+  'matic-network':'MATIC migrated to POL 1:1. Market stats are POL\'s.',
+  'lukso-token':'LYXe migrated to LYX 1:1. Market stats are LYX\'s.'};
+// DefiLlama /chart sometimes answers {"coins":{}} for one span/period and fine for the
+// next (HONEY, STONK, POL on 10/6), so each range tries several resolutions in order.
+const CV_RANGES={'1d':{q:[[96,'15m'],[24,'1h'],[48,'30m']],days:1,lbl:'24H'},'7d':{q:[[84,'2h'],[42,'4h'],[168,'1h']],days:7,lbl:'7D'},
+  '30d':{q:[[120,'6h'],[30,'1d'],[60,'12h']],days:30,lbl:'30D'},'1y':{q:[[365,'1d'],[180,'2d'],[52,'1w']],days:365,lbl:'1Y'}};
+window.__cv={open:false,range:'1d',tok:0};
+const _cvMarket={},_cvChart={};
+function cvAlias(id){return LLAMA_ALIAS[id]||id;}
+function fmtPx(n){
+  if(n==null||!isFinite(n))return null;
+  if(n>=1000)return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(n>=1)return '$'+n.toFixed(2);
+  if(n<=0)return '$0';
+  const d=Math.min(12,Math.max(4,Math.ceil(-Math.log10(n))+3));
+  return '$'+n.toFixed(d);
+}
+function fmtBig(n,cur){
+  if(n==null||!isFinite(n)||n<=0)return null;
+  const p=cur?'$':'';
+  if(n>=1e12)return p+(n/1e12).toFixed(2)+'T';
+  if(n>=1e9)return p+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return p+(n/1e6).toFixed(2)+'M';
+  return p+Math.round(n).toLocaleString('en-US');
+}
+function fmtDate(iso){if(!iso)return '';const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fmtPct(p){return (p>=0?'+':'')+p.toFixed(p!==0&&Math.abs(p)<0.1?2:1)+'%';}
+
+async function cvMarket(id){
+  const a=cvAlias(id),hit=_cvMarket[a];
+  if(hit&&Date.now()-hit.t<60000)return hit.d;
+  const num=v=>(typeof v==='number'&&isFinite(v))?v:null, pos=v=>(typeof v==='number'&&v>0)?v:null;
+  let d=null;
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+encodeURIComponent(a),{signal:AbortSignal.timeout(8000)});
+    if(r.ok){const m=(await r.json())[0];
+      if(m)d={src:'CoinGecko',name:m.name,image:m.image,price:num(m.current_price),chg24:num(m.price_change_percentage_24h),
+        rank:pos(m.market_cap_rank),mcap:pos(m.market_cap),vol:pos(m.total_volume),fdv:pos(m.fully_diluted_valuation),
+        circ:pos(m.circulating_supply),total:pos(m.total_supply),max:pos(m.max_supply),high24:pos(m.high_24h),low24:pos(m.low_24h),
+        ath:pos(m.ath),athDate:m.ath_date,athChg:num(m.ath_change_percentage),atl:pos(m.atl),atlDate:m.atl_date,atlChg:num(m.atl_change_percentage)};}
+  }catch(e){console.warn('coin page: CoinGecko fail',e);}
+  if(!d&&PAPRIKA[a]){
+    try{
+      const r=await fetch('https://api.coinpaprika.com/v1/tickers/'+PAPRIKA[a],{signal:AbortSignal.timeout(8000)});
+      if(r.ok){const t=await r.json(),q=(t.quotes&&t.quotes.USD)||{};
+        // A Paprika price far off the row's own price means Paprika is tracking a different
+        // token (PYR on 10/6: 0.064 vs 0.027), so its numbers would be wrong, not missing.
+        const exp=prices[id]!=null?prices[id]/(LLAMA_MULT[id]||1):null;
+        if(exp&&q.price&&Math.abs(q.price/exp-1)>0.25)throw new Error('paprika price mismatch '+q.price+' vs '+exp);
+        // Paprika sometimes carries a junk market cap (KSM: $125k against $3.5M daily volume).
+        if(q.market_cap>0&&q.volume_24h>10*q.market_cap){q.market_cap=0;q.fully_diluted_market_cap=0;}
+        d={src:'CoinPaprika',name:t.name,image:'https://static.coinpaprika.com/coin/'+PAPRIKA[a]+'/logo.png',price:num(q.price),chg24:num(q.percent_change_24h),
+          rank:pos(q.market_cap)?pos(t.rank):null,mcap:pos(q.market_cap),vol:pos(q.volume_24h),fdv:pos(q.fully_diluted_market_cap),
+          circ:pos(t.circulating_supply),total:pos(t.total_supply),max:pos(t.max_supply),high24:null,low24:null,
+          ath:pos(q.ath_price),athDate:q.ath_date,athChg:num(q.percent_from_price_ath),atl:null,atlDate:null,atlChg:null};}
+    }catch(e){console.warn('coin page: CoinPaprika fail',e);}
+  }
+  if(!d){
+    try{const r=await fetch('https://coins.llama.fi/percentage/coingecko:'+a);const j=await r.json();const v=j.coins&&j.coins['coingecko:'+a];
+      if(typeof v==='number')d={src:'DefiLlama',chg24:v};}catch(_){}
+  }
+  if(d)_cvMarket[a]={t:Date.now(),d};
+  return d;
+}
+async function cvChartData(id,k){
+  const a=cvAlias(id),key=a+'|'+k,hit=_cvChart[key];
+  if(hit&&Date.now()-hit.t<120000)return hit.d;
+  const R=CV_RANGES[k];let pts=null,src='DefiLlama';
+  // keep the densest answer; stop as soon as one is dense enough to draw a real line
+  for(const [span,period] of R.q){
+    try{
+      const r=await fetch(`https://coins.llama.fi/chart/coingecko:${a}?span=${span}&period=${period}`,{signal:AbortSignal.timeout(7000)});
+      if(r.ok){const v=((await r.json()).coins||{})['coingecko:'+a];
+        if(v&&v.prices&&v.prices.length>1&&(!pts||v.prices.length>pts.length))pts=v.prices.map(p=>[p.timestamp*1000,p.price]);}
+    }catch(e){console.warn('coin page: DefiLlama chart fail',e);}
+    if(pts&&pts.length>=Math.min(12,span/2))break;
+  }
+  if(!pts){
+    try{const r=await fetch(`https://api.coingecko.com/api/v3/coins/${a}/market_chart?vs_currency=usd&days=${R.days}`,{signal:AbortSignal.timeout(10000)});
+      if(r.ok){const j=await r.json();if(j.prices&&j.prices.length>1){pts=j.prices;src='CoinGecko';}}}catch(_){}
+  }
+  const m=LLAMA_MULT[id]||1;if(pts&&m!==1)pts=pts.map(p=>[p[0],p[1]*m]);
+  const d=pts?{pts,src}:null;
+  if(d)_cvChart[key]={t:Date.now(),d};
+  return d;
+}
+
+function _cvHolding(){
+  const id=__cv.id,sym=__cv.sym,mp=loadMP();
+  const all=[...CRYPTO,...mp.crypto];
+  const rows=id?all.filter(c=>c.id===id):all.filter(c=>c.sym===sym);
+  return rows.reduce((t,c)=>t+(+c.qty||0),0);
+}
+function paintCoinHolding(){
+  if(!__cv.open)return;
+  const qty=_cvHolding(),px=prices[__cv.id];
+  document.getElementById('cvQty').textContent=fmtQty(qty)+' '+__cv.sym;
+  const val=px!=null?qty*px:null;
+  document.getElementById('cvVal').textContent=val!=null?fmt$exact(val):'n/a';
+  const tot=window.__lastTotal;
+  document.getElementById('cvShare').textContent=(val!=null&&tot)?(val/tot*100).toFixed(val/tot<0.01?2:1)+'%':'n/a';
+  if(px!=null)document.getElementById('cvPrice').textContent=fmtPx(px);
+  _cvPaintChg();
+}
+function _cvPaintChg(){
+  const el=document.getElementById('cvChg'),m=__cv.market,px=prices[__cv.id]!=null?prices[__cv.id]:(m&&m.price!=null?m.price*(LLAMA_MULT[__cv.id]||1):null);
+  if(!m||m.chg24==null){el.innerHTML='24h change n/a';el.style.color='var(--text-dim)';return;}
+  const p=m.chg24,abs=px!=null?px-px/(1+p/100):null;
+  el.style.color=p>=0?'var(--green)':'var(--red)';
+  el.innerHTML=fmtPct(p)+(abs!=null?' ('+(abs>=0?'+':'-')+(px>=1?'$'+Math.abs(abs).toFixed(2):fmtPx(Math.abs(abs)))+')':'')+'<span>24h</span>';
+}
+function _cvStat(k,v,sub,bar){
+  return '<div class="cv-stat"><span class="k">'+k+'</span><span class="v'+(v==null?' na':'')+'">'+(v==null?'n/a':v)+
+    (v!=null&&sub?'<small>'+sub+'</small>':'')+(v!=null&&bar!=null?'<div class="cv-supbar"><i style="width:'+Math.min(100,bar).toFixed(1)+'%"></i></div>':'')+'</span></div>';
+}
+function paintCoinMarket(){
+  const m=__cv.market||{},mult=LLAMA_MULT[__cv.id]||1;
+  if(m.name)document.getElementById('cvName').textContent=m.name;
+  const logo=document.getElementById('cvLogo');
+  if(m.image){const img=new Image();img.alt='';img.onload=()=>{logo.innerHTML='';logo.appendChild(img);};img.src=m.image;}
+  const rk=document.getElementById('cvRank');
+  if(m.rank){rk.hidden=false;rk.textContent='Rank #'+m.rank;}else rk.hidden=true;
+  if(prices[__cv.id]==null&&m.price!=null)document.getElementById('cvPrice').textContent=fmtPx(m.price*mult);
+  _cvPaintChg();
+  const supPct=(m.circ&&(m.max||m.total))?m.circ/(m.max||m.total)*100:null;
+  const range=(m.low24&&m.high24)?fmtPx(m.low24)+' to '+fmtPx(m.high24):null;
+  const ath=m.ath?fmtPx(m.ath):null, atl=m.atl?fmtPx(m.atl):null;
+  const athSub=[fmtDate(m.athDate),m.athChg!=null?fmtPct(m.athChg)+' from ATH':''].filter(Boolean).join(' &middot; ');
+  const atlSub=[fmtDate(m.atlDate),m.atlChg!=null?fmtPct(m.atlChg)+' from ATL':''].filter(Boolean).join(' &middot; ');
+  document.getElementById('cvStats').innerHTML=
+    _cvStat('Market cap',fmtBig(m.mcap,true))+
+    _cvStat('Market cap rank',m.rank?'#'+m.rank:null)+
+    _cvStat('24h volume',fmtBig(m.vol,true))+
+    _cvStat('Fully diluted valuation',fmtBig(m.fdv,true))+
+    _cvStat('Circulating supply',fmtBig(m.circ,false),supPct!=null?supPct.toFixed(1)+'% of '+(m.max?'max':'total'):'',supPct)+
+    _cvStat('Total supply',fmtBig(m.total,false))+
+    _cvStat('Max supply',fmtBig(m.max,false))+
+    _cvStat('24h range',range)+
+    _cvStat('All-time high',ath,athSub)+
+    _cvStat('All-time low',atl,atlSub);
+  _cvSrc();
+}
+function _cvSrc(){
+  const m=__cv.market,c=__cv.chart;
+  document.getElementById('cvSrc').textContent='Market data: '+(m&&m.src?m.src:'unavailable')+'. Chart: '+(c&&c.src?c.src:'unavailable')+'.';
+}
+
+async function openCoin(id,sym){
+  if(__cv.open)return;
+  const tok=++__cv.tok;
+  Object.assign(__cv,{open:true,id:id||'',sym:sym||'',scroll:window.scrollY,market:null,chart:null,pushed:false});
+  document.getElementById('pfWrap').hidden=true;
+  document.getElementById('pagerDots').style.display='none';
+  document.getElementById('coinView').hidden=false;
+  try{history.pushState({coin:1},'');__cv.pushed=true;}catch(_){}
+  window.scrollTo(0,0);
+  document.getElementById('cvPf').textContent=PF.name.replace(/<[^>]+>/g,'');
+  document.getElementById('cvName').textContent=sym;
+  document.getElementById('cvSym').textContent=sym;
+  document.getElementById('cvLogo').textContent=(sym||'?').slice(0,1);
+  document.getElementById('cvRank').hidden=true;
+  document.getElementById('cvPrice').textContent=prices[id]!=null?fmtPx(prices[id]):'--';
+  const note=document.getElementById('cvNote');note.hidden=!CV_NOTE[id];note.textContent=CV_NOTE[id]||'';
+  document.getElementById('cvStats').innerHTML='<div class="cv-stat"><span class="k">Loading market data...</span></div>';
+  document.getElementById('cvChg').textContent='--';document.getElementById('cvChg').style.color='var(--text-dim)';
+  document.getElementById('cvSrc').textContent='';
+  paintCoinHolding();
+  if(!id){
+    __cv.market={};paintCoinMarket();
+    document.getElementById('cvMsg').textContent='No CoinGecko id on this position, so no chart.';
+    _cvClear();return;
+  }
+  cvLoadRange(__cv.range);
+  const m=await cvMarket(id);
+  if(tok!==__cv.tok||!__cv.open)return;
+  __cv.market=m||{};paintCoinMarket();
+}
+function closeCoin(fromPop){
+  if(!__cv.open)return;
+  __cv.open=false;__cv.tok++;
+  document.getElementById('coinView').hidden=true;
+  document.getElementById('pfWrap').hidden=false;
+  document.getElementById('pagerDots').style.display='';
+  const y=__cv.scroll||0;
+  window.scrollTo(0,y);requestAnimationFrame(()=>window.scrollTo(0,y));
+  window.dispatchEvent(new Event('resize'));
+  requestAnimationFrame(()=>window.scrollTo(0,y));
+  // Only step back over the entry we pushed ourselves (never off the unlocked page).
+  if(!fromPop&&__cv.pushed){__cv.ignorePop=true;__cv.pushed=false;history.back();}
+}
+window.addEventListener('popstate',function(){
+  if(__cv.ignorePop){__cv.ignorePop=false;return;}
+  if(__cv.open){__cv.pushed=false;closeCoin(true);}
+});
+
+function _cvClear(){const cv=document.getElementById('cvCanvas');const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);document.getElementById('cvRngChg').textContent='';}
+async function cvLoadRange(k){
+  __cv.range=k;
+  document.querySelectorAll('#cvRng button').forEach(b=>b.classList.toggle('active',b.dataset.k===k));
+  const tok=__cv.tok,id=__cv.id;
+  const msg=document.getElementById('cvMsg');msg.textContent='Loading chart...';msg.style.display='';
+  _cvClear();
+  const d=await cvChartData(id,k);
+  if(tok!==__cv.tok||!__cv.open||__cv.range!==k)return;
+  __cv.chart=d;_cvSrc();
+  if(!d){msg.textContent='No '+CV_RANGES[k].lbl+' price history for this coin'+(k==='1y'?'.':'. Try 1Y.');return;}
+  msg.style.display='none';cvDraw();
+}
+function _cvTimeLbl(ms,k){
+  const d=new Date(ms);
+  if(k==='1d')return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if(k==='1y'){const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return M[d.getMonth()]+" '"+String(d.getFullYear()).slice(2);}
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function _cvAxis(n){
+  if(n>=1000)return '$'+(n>=1e5?Math.round(n/1e3)+'k':n.toLocaleString('en-US',{maximumFractionDigits:0}));
+  if(n>=1)return '$'+n.toFixed(2);
+  return '$'+Number(n.toPrecision(3)).toString();
+}
+function cvDraw(hiIdx){
+  const cv=document.getElementById('cvCanvas'),d=__cv.chart;if(!d||!__cv.open)return;
+  const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;if(!r.width)return;
+  cv.width=r.width*dpr;cv.height=r.height*dpr;
+  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  const pts=d.pts,v=pts.map(p=>p[1]),t0=pts[0][0],t1=pts[pts.length-1][0];
+  let lo=Math.min(...v),hi=Math.max(...v);const pv=(hi-lo)*0.08||hi*0.02||1;lo=Math.max(0,lo-pv);hi=hi+pv;
+  c.font='10px Inter,system-ui,sans-serif';
+  const labs=[0,1,2,3,4].map(k=>lo+(hi-lo)*k/4);
+  const PL=Math.ceil(Math.max(...labs.map(x=>c.measureText(_cvAxis(x)).width)))+12,PR=10,PT=12,PB=22;
+  const W=r.width-PL-PR,H=r.height-PT-PB;
+  const X=ms=>PL+(t1===t0?0:(ms-t0)/(t1-t0))*W,Y=y=>PT+H-((y-lo)/(hi-lo))*H;
+  const up=v[v.length-1]>=v[0],col=up?'#4ade80':'#e06478',rgb=up?'74,222,128':'224,100,120';
+  c.clearRect(0,0,r.width,r.height);
+  c.strokeStyle='#262a38';c.lineWidth=1;c.fillStyle='#6b7088';c.textAlign='right';c.textBaseline='middle';
+  labs.forEach(val=>{const y=Y(val);c.globalAlpha=.5;c.beginPath();c.moveTo(PL,y);c.lineTo(r.width-PR,y);c.stroke();c.globalAlpha=1;c.fillText(_cvAxis(val),PL-8,y);});
+  c.textBaseline='top';c.textAlign='center';
+  const tw=c.measureText(_cvTimeLbl(t1,__cv.range)).width,ticks=Math.max(2,Math.min(5,Math.floor(W/(tw+28))+1));
+  for(let i=0;i<ticks;i++){const ms=t0+(t1-t0)*i/(ticks-1);const lx=Math.min(Math.max(X(ms),PL+tw/2),r.width-PR-tw/2);c.fillText(_cvTimeLbl(ms,__cv.range),lx,r.height-PB+6);}
+  c.beginPath();pts.forEach((p,i)=>{const x=X(p[0]),y=Y(p[1]);i?c.lineTo(x,y):c.moveTo(x,y);});
+  c.strokeStyle=col;c.lineWidth=1.8;c.lineJoin='round';c.shadowColor='rgba('+rgb+',.5)';c.shadowBlur=8;c.stroke();c.shadowBlur=0;
+  c.lineTo(X(t1),PT+H);c.lineTo(X(t0),PT+H);c.closePath();
+  const f=c.createLinearGradient(0,PT,0,PT+H);f.addColorStop(0,'rgba('+rgb+',.2)');f.addColorStop(1,'rgba('+rgb+',0)');c.fillStyle=f;c.fill();
+  const rc=document.getElementById('cvRngChg'),p=(v[v.length-1]-v[0])/v[0]*100;
+  rc.textContent=isFinite(p)?fmtPct(p)+' '+CV_RANGES[__cv.range].lbl:'';rc.style.color=up?'var(--green)':'var(--red)';
+  cv._g={X,Y,PL,W,PT,H,t0,t1};
+  const tip=document.getElementById('cvTip');
+  if(hiIdx==null){tip.style.opacity=0;return;}
+  const hp=pts[hiIdx],px=X(hp[0]),py=Y(hp[1]);
+  c.strokeStyle='rgba(107,140,199,.45)';c.lineWidth=1;c.setLineDash([3,3]);c.beginPath();c.moveTo(px,PT);c.lineTo(px,PT+H);c.stroke();c.setLineDash([]);
+  c.beginPath();c.arc(px,py,4,0,7);c.fillStyle=col;c.fill();c.strokeStyle='#0b0d14';c.lineWidth=2;c.stroke();
+  const dd=new Date(hp[0]);
+  tip.innerHTML='<div class="t-d">'+dd.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+(__cv.range==='1y'?'':' '+dd.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}))+
+    '</div><div class="t-v" style="color:'+col+'">'+fmtPx(hp[1])+'</div>';
+  const w=tip.offsetWidth||120;tip.style.left=Math.max(0,Math.min(r.width-w,px-w/2))+'px';tip.style.top=Math.max(0,py-54)+'px';tip.style.opacity=1;
+}
+(function(){
+  const cv=document.getElementById('cvCanvas');
+  const near=e=>{const g=cv._g,d=__cv.chart;if(!g||!d)return null;const r=cv.getBoundingClientRect(),x=e.clientX-r.left;
+    if(x<g.PL-4||x>g.PL+g.W+4)return null;const ms=g.t0+(x-g.PL)/g.W*(g.t1-g.t0);let bi=0,bd=Infinity;
+    d.pts.forEach((p,i)=>{const dd=Math.abs(p[0]-ms);if(dd<bd){bd=dd;bi=i;}});return bi;};
+  cv.addEventListener('pointermove',e=>cvDraw(near(e)));
+  cv.addEventListener('pointerdown',e=>cvDraw(near(e)));
+  ['pointerleave','pointercancel'].forEach(n=>cv.addEventListener(n,()=>cvDraw()));
+  cv.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')setTimeout(()=>cvDraw(),1200);});
+  document.getElementById('cvRng').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&__cv.open&&__cv.id)cvLoadRange(b.dataset.k);});
+  window.addEventListener('resize',()=>{if(__cv.open)cvDraw();});
+})();
+
 /* ── INIT ── */
 /* ── Portfolio switching: swipe sideways or tap the dots ── */
 function showPF(key,dir){
@@ -1041,6 +1492,8 @@ function showPF(key,dir){
   document.addEventListener('touchend',e=>{
     if(x0===null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
     if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    // On a coin page a swipe right goes back to the list; it never switches portfolios.
+    if(window.__cv&&window.__cv.open){if(dx>0)closeCoin();return;}
     const i=PF_ORDER.indexOf(PF.key)+(dx<0?1:-1);
     if(i>=0&&i<PF_ORDER.length)showPF(PF_ORDER[i],dx<0?1:-1);
   },{passive:true});
