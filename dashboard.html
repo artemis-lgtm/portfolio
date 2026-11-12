@@ -563,9 +563,13 @@ const P_EQUITIES=[
   {sym:'GME+',name:'GME+',shares:30,proxyKey:'GME',color:'var(--light-teal)'},
   {sym:'Metaplanet',name:'Metaplanet',shares:3600,proxyKey:'3350.T',color:'var(--light-teal)',isJpy:true},
   {sym:'BMNR',name:'BitMine Immersion',shares:200,proxyKey:'BMNR',color:'var(--light-teal)'},
-  {sym:'SPCX',name:'SpaceX',shares:10,proxyKey:'SPCX',color:'var(--light-teal)'},
+  {sym:'SPCX',name:'SpaceX',shares:17,proxyKey:'SPCX',color:'var(--light-teal)'},
   {sym:'IONQ',name:'IonQ',shares:22,proxyKey:'IONQ',color:'var(--light-teal)'},
   {sym:'NVDA',name:'NVIDIA',shares:1,proxyKey:'NVDA',color:'var(--light-teal)'},
+  {sym:'MU',name:'Micron',shares:1,proxyKey:'MU',color:'var(--light-teal)'},
+  {sym:'MRVL',name:'Marvell',shares:1,proxyKey:'MRVL',color:'var(--light-teal)'},
+  {sym:'ALAB',name:'Astera Labs',shares:2,proxyKey:'ALAB',color:'var(--light-teal)'},
+  {sym:'LRCX',name:'Lam Research',shares:2,proxyKey:'LRCX',color:'var(--light-teal)'},
 ];
 
 const P_COLLECTIBLES=[
@@ -729,7 +733,7 @@ async function fetchNftFloor(){
 const PRICE_API='https://portfolio-prices.vercel.app/quotes';
 let stockMissing=[];
 async function fetchStocks(){
-  const tickers=['TSLA','MSTR','GME','3350.T','BMNR','SPCX','IONQ','NVDA'];
+  const tickers=['TSLA','MSTR','GME','3350.T','BMNR','SPCX','IONQ','NVDA','MU','MRVL','ALAB','LRCX'];
   try{
     const r=await fetch(`${PRICE_API}?symbols=${encodeURIComponent(tickers.join(','))}`,
                         {signal:AbortSignal.timeout(12000)});
@@ -971,8 +975,8 @@ function inlineDelete(type,mpId){
 
 // Source-side quantity changes: a saved phone override for the same row would mask
 // the new baseline, so drop that row's override once per revision.
-const BASELINE_REV='2026-10-27-equities';
-const BASELINE_CHANGED=['crypto_solana'];
+const BASELINE_REV='2026-11-12-equities';
+const BASELINE_CHANGED=['equities_SPCX'];
 // On load: apply any saved qty overrides to hardcoded arrays
 function applyOverrides(pf){
   const OK=pf.prefix+'portfolio-qty-override';
